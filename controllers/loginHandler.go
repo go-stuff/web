@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"log"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/go-stuff/web/models"
@@ -27,22 +27,36 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// this is just an example, you can swap out authentication
+		// with AD, LDAP, oAuth, ect...
+		authenticatedUser := make(map[string]string)
+		authenticatedUser["test"] = "test"
+		authenticatedUser["user1"] = "password"
+		authenticatedUser["user2"] = "password"
+		authenticatedUser["user3"] = "password"
+
 		user := models.User{}
 
-		// authenticate login
-		if r.FormValue("username") != "test" && r.FormValue("password") != "test" {
-			render(w, r, "login.html",
-			struct {
-				Username string
-				Error    error
-			}{
-				Username: r.FormValue("username"),
-				Error:    errors.New("username not found"),
-			})
-			return
+		var found bool
+		for k, v := range authenticatedUser {
+			if r.FormValue("username") == k && r.FormValue("password") == v {
+				user.Username = k
+				found = true
+			}
 		}
 
-		user.Username = "test"
+		// user not found
+		if !found {
+			render(w, r, "login.html",
+				struct {
+					Username string
+					Error    error
+				}{
+					Username: r.FormValue("username"),
+					Error:    errors.New("username not found"),
+				})
+			return
+		}
 
 		// add username to the session
 		session.Values["username"] = user.Username
