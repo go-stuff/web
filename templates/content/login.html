@@ -1,0 +1,21 @@
+{{define "content"}}
+
+{{ if .Error }}
+<div class="error">{{ .Error }}</div>
+{{ end }}
+
+<h1>Login</h1>
+
+<form class="login" method="post">
+
+    <label class="login-label" for="username">Username</label>
+    <input class="login-input" type="text" name="username" id="username" value="{{ .Username }}" required pattern="[0-9A-Za-z/\s-]*">
+
+    <label class="login-label" for="password">Password</label>
+    <input class="login-input" type="password" name="password" id="password" required>
+
+    <input class="login-submit" type="submit" name="login" value="Login">
+    
+</form>
+
+{{end}}
