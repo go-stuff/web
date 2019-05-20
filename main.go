@@ -18,6 +18,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+var MONGOURL string
+
 func main() {
 
 	// init database
@@ -66,8 +68,13 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	MONGOURL, ok := os.LookupEnv("MONGOURL")
+	if !ok {
+		MONGOURL = "mongodb://localhost:27017"
+	}
+
 	// Connect does not do server discovery, use Ping method.
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MONGOURL))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +85,7 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 		return nil, nil, err
 	}
 
-	log.Println("main.go > INFO > Connected to MongoDB.")
+	log.Println("main.go > INFO > Connected to MongoDB. @ %s", MONGOURL)
 	return client, ctx, nil
 }
 
