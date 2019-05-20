@@ -18,8 +18,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-var MONGOURL string
-
 func main() {
 
 	// init database
@@ -54,7 +52,7 @@ func main() {
 	}
 
 	// start server
-	log.Printf("main.go > INFO > Listening and Serving on %s ...", server.Addr)
+	log.Println("main.go > INFO > Listening and Serving @", server.Addr)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
@@ -68,13 +66,14 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	MONGOURL, ok := os.LookupEnv("MONGOURL")
+	// set the mongo url environment variable if it is not set
+	MongoURL, ok := os.LookupEnv("MONGOURL")
 	if !ok {
-		MONGOURL = "mongodb://localhost:27017"
+		MongoURL = "mongodb://localhost:27017"
 	}
 
 	// Connect does not do server discovery, use Ping method.
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MONGOURL))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MongoURL))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -85,26 +84,28 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 		return nil, nil, err
 	}
 
-	log.Println("main.go > INFO > Connected to MongoDB. @ %s", MONGOURL)
+	log.Println("main.go > INFO > Connected to MongoDB @", MongoURL)
 	return client, ctx, nil
 }
 
 func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, error) {
 	// set authentication key environment variables if it is not set
-	if os.Getenv("GORILLA_SESSION_AUTH_KEY") == "" {
-		os.Setenv("GORILLA_SESSION_AUTH_KEY", string(securecookie.GenerateRandomKey(32)))
+	GorillaSessionAuthKey, ok := os.LookupEnv("GORILLA_SESSION_AUTH_KEY")
+	if !ok {
+		GorillaSessionAuthKey = string(securecookie.GenerateRandomKey(32))
 	}
 
 	// set encryption key environment variable if it is not set
-	if os.Getenv("GORILLA_SESSION_ENC_KEY") == "" {
-		os.Setenv("GORILLA_SESSION_ENC_KEY", string(securecookie.GenerateRandomKey(16)))
+	GorillaSessionEncKey, ok := os.LookupEnv("GORILLA_SESSION_ENC_KEY")
+	if !ok {
+		GorillaSessionEncKey = string(securecookie.GenerateRandomKey(16))
 	}
 
 	store := mongostore.NewMongoStore(
 		col,
 		age,
-		[]byte(os.Getenv("GORILLA_SESSION_AUTH_KEY")), // Auth Key
-		[]byte(os.Getenv("GORILLA_SESSION_ENC_KEY")),  // Enc Key
+		[]byte(GorillaSessionAuthKey),
+		[]byte(GorillaSessionEncKey),
 	)
 
 	return store, nil
