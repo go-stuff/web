@@ -19,7 +19,6 @@ import (
 )
 
 func main() {
-
 	// init database
 	client, ctx, err := initMongoClient()
 	if err != nil {
@@ -60,25 +59,25 @@ func main() {
 }
 
 func initMongoClient() (*mongo.Client, context.Context, error) {
-	// A Context carries a deadline, cancelation signal, and request-scoped values
+	// a Context carries a deadline, cancelation signal, and request-scoped values
 	// across API boundaries. Its methods are safe for simultaneous use by multiple
-	// goroutines.
+	// goroutines
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// set the mongo url environment variable if it is not set
+	// use a default mongo url if the MONGOURL environment variable is not set
 	MongoURL, ok := os.LookupEnv("MONGOURL")
 	if !ok {
 		MongoURL = "mongodb://localhost:27017"
 	}
 
-	// Connect does not do server discovery, use Ping method.
+	// connect does not do server discovery, use ping
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MongoURL))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Ping for server discovery.
+	// ping for server discovery
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		return nil, nil, err
@@ -89,13 +88,15 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 }
 
 func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, error) {
-	// set authentication key environment variables if it is not set
+	// generate an authentication key to use if the GORILLA_SESSION_AUTH_KEY environment
+	// variable is not set
 	GorillaSessionAuthKey, ok := os.LookupEnv("GORILLA_SESSION_AUTH_KEY")
 	if !ok {
 		GorillaSessionAuthKey = string(securecookie.GenerateRandomKey(32))
 	}
 
-	// set encryption key environment variable if it is not set
+	// generate an encryption key to use if the GORILLA_SESSION_ENC_KEY environment
+	// variable is not set
 	GorillaSessionEncKey, ok := os.LookupEnv("GORILLA_SESSION_ENC_KEY")
 	if !ok {
 		GorillaSessionEncKey = string(securecookie.GenerateRandomKey(16))
