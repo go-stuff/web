@@ -1,0 +1,14 @@
+kind: pipeline
+name: docker-build
+
+steps:
+- name: docker  
+  image: plugins/docker
+  settings:
+    username: 
+      from_secret: DOCKER_USER
+    password:
+      from_secret: DOCKER_PASS
+    repo: macintoshprime/web
+    tags: latest
+    dockerfile: build/Dockerfile
