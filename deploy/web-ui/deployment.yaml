@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gostuff-web-ui
+spec:
+  selector:
+    matchLabels:
+      app: gostuff-web
+  template:
+    metadata:
+      labels:
+        app: gostuff-web
+    spec:
+      containers:
+      - name: web
+        image: macintoshprime/web:latest
+        imagePullPolicy: Always
+        env:
+          - name: MONGOURL
+            value: mongodb://mongo-svc:27017 # Change this string to your mongo url
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
