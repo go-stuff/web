@@ -1,0 +1,14 @@
+{{define "content"}}
+{{ if .Error }}
+<div class="error">{{ .Error }}</div>
+{{ end }}
+<h1>Home</h1>
+<div calss="login">
+    <p>Welcome {{ .User.Username }}!</p>
+    <img class="login-image" src="/static/img/GOPHER_SHARE_640x320.png" alt="Gopher Share">
+    <img class="login-image" src="/static/img/GOPHER_SHARE_640x320.png" alt="Gopher Share">
+    <img class="login-image" src="/static/img/GOPHER_SHARE_640x320.png" alt="Gopher Share">
+    <img class="login-image" src="/static/img/GOPHER_SHARE_640x320.png" alt="Gopher Share">
+    <img class="login-image" src="/static/img/GOPHER_SHARE_640x320.png" alt="Gopher Share">
+</div>
+{{end}}

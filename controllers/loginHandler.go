@@ -28,7 +28,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// this is just an example, you can swap out authentication
-		// with AD, LDAP, oAuth, ect...
+		// with AD, LDAP, oAuth, etc...
 		authenticatedUser := make(map[string]string)
 		authenticatedUser["test"] = "test"
 		authenticatedUser["user1"] = "password"

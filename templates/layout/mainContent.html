@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    {{template "head" .}}
+    <body>
+        <header class="level has-background-black">
+            <!-- Left side -->
+            <div class="level-left has-background-black">
+                <div class="level-item has-background-black">
+                    {{template "header" .}}
+                </div>
+            </div>
+            <!-- Right side -->
+            <div class="is-hidden level-right has-background-black is-paddingless">
+                <div class="level-item has-background-black">
+                    {{template "bypass" .}}
+                </div>
+            </div>
+        </header>
+        <div class="tile is-ancestor">
+            <div class="tile is-parent is-vertical is-paddingless">
+                <div class="tile is-child is-12">
+                    <main class="box" id="main">
+                        {{template "content" .}}
+                    </main>
+                </div>
+                <div class="tile is-child is-12">
+                    <footer class="footer has-background-white-ter">
+                        {{template "footer" .}}
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
