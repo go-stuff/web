@@ -7,6 +7,17 @@
 
 Web page using Gorilla web toolkit and MongoDB Driver.
 
+# Deploy
+
+## Kubernetes
+
+To deploy in Kubernetes run the following in the root dir:
+```
+kubectl apply -R -f deploy/
+```
+
+This will deploy an instance of mongodb along with the demo web app.
+
 ## License
 
 [MIT License](LICENSE)

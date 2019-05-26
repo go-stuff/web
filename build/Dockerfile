@@ -11,5 +11,9 @@ FROM gcr.io/distroless/base
 #s Default mongo url
 ENV MONGOURL="mongodb://myawesomecomputer:27017"
 
-COPY --from=build /go/bin/web /
-CMD ["/web"]
+WORKDIR /web
+
+COPY ./static ./static
+COPY ./templates ./templates
+COPY --from=build /go/bin/web .
+CMD ["/web/web"]
