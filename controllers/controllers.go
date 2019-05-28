@@ -8,12 +8,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gorilla/mux"
-
 	"github.com/go-stuff/mongostore"
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
+	client    *mongo.Client
 	store     *mongostore.MongoStore
 	layout    *template.Template
 	templates map[string]*template.Template
@@ -21,7 +22,8 @@ var (
 
 // Init gets the store pointer from main.go and returns a router
 // pointer to main.go
-func Init(mongostore *mongostore.MongoStore) *mux.Router {
+func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore) *mux.Router {
+	client = mongoclient
 	store = mongostore
 
 	err := initTemplates()
@@ -173,6 +175,7 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/home", homeHandler).Methods("GET")
 
 	router.HandleFunc("/test", testHandler).Methods("GET")
+	router.HandleFunc("/sessions", sessionsHandler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("GET", "POST")
 	router.HandleFunc("/logout", loginHandler).Methods("GET")

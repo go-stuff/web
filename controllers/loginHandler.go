@@ -58,7 +58,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// add username to the session
+		// add important values to the session
+		session.Values["remoteaddr"] = r.RemoteAddr
+		session.Values["host"] = r.Host
 		session.Values["username"] = user.Username
 
 		// save the session

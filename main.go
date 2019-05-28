@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// init controllers
-	router := controllers.Init(store)
+	router := controllers.Init(client, store)
 
 	// init middlware
 	middleware.Init(store)
