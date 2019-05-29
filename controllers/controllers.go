@@ -177,6 +177,11 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/test", testHandler).Methods("GET")
 	router.HandleFunc("/sessions", sessionsHandler).Methods("GET")
 
+	router.HandleFunc("/roles", rolesHandler).Methods("GET")
+	router.HandleFunc("/roles/create", rolesCreateHandler).Methods("GET", "POST")
+	router.HandleFunc("/roles/update/{id}", rolesUpdateHandler).Methods("GET", "POST")
+	router.HandleFunc("/roles/delete/{id}", rolesDeleteHandler).Methods("GET")
+
 	router.HandleFunc("/login", loginHandler).Methods("GET", "POST")
 	router.HandleFunc("/logout", loginHandler).Methods("GET")
 
