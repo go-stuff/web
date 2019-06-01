@@ -1,0 +1,21 @@
+{{define "content"}}
+<h1 class="title is-3">{{ .Title }}</h1>
+<hr>
+<form method="post">
+    <div class="field">
+        <label class="label" for="name">Name</label>
+        <input class="input" type="text" name="name" id="username" value="{{ .Role.Name }}" required pattern="[0-9A-Za-z/\s-]*">
+    </div>
+    <div class="field">
+        <label class="label" for="description">Description</label>
+        <input class="input" type="text" name="description" id="description" value="{{ .Role.Description }}" required>
+    </div>
+    <input class="button is-primary" type="submit" name="add" value="{{ .Action }}">
+    <a class="button is-secondary" href="/roles">Cancel</a>
+</form>
+{{ if .Role.CreatedBy }}
+<hr>
+<p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ .Role.CreatedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</p>
+<p><strong>Modified by:</strong> {{ .Role.ModifiedBy }} @ {{ .Role.ModifiedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</p>
+{{ end }}
+{{end}}

@@ -1,4 +1,8 @@
 {{define "nav"}}
+<p class="menu-label has-text-black is-family-sans-serif is-sr-only">Menu</p>
+<ul class="menu-list is-sr-only">
+    <li class="is-sr-only"><a href="#main">Skip to main content</a></li>
+</ul>
 <p class="menu-label has-text-black is-family-sans-serif">Admin</p>
 <ul class="menu-list">
     <li><a href="/roles">Roles</a></li>
@@ -7,5 +11,6 @@
 <p class="menu-label has-text-black is-family-sans-serif">General</p>
 <ul class="menu-list">
     <li><a href="/home">Home</a></li>
+    <li class="is-hidden-desktop"><a href="/logout">Logout</a></li>
 </ul>
 {{end}}

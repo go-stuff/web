@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -27,33 +26,26 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// initialize a slice of roles
-	var roles []*models.Role
-
-	options := options.FindOptions{}
-
-	// sort by name
-	options.Sort = bson.D{
-		{Key: "name", Value: 1}, // acending
-		// { Key: "name", Value: -1}, // descending
-	}
-
-	// Limit by 100 documents only
-	// limit := int64(100)
-	// options.Limit = &limit
-
 	// find all roles
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	cursor, err := client.Database("test").Collection("roles").Find(ctx,
 		bson.D{},
-		&options,
+		&options.FindOptions{
+			Sort: bson.D{
+				{Key: "name", Value: 1}, // acending
+				// { Key: "name", Value: -1}, // descending
+			},
+		},
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cursor.Close(ctx)
+
+	// initialize a slice of roles
+	var roles []*models.Role
 
 	// itterate each document returned
 	for cursor.Next(ctx) {
@@ -69,25 +61,8 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 		role.CreatedAt = role.CreatedAt.Local()
 		role.ModifiedAt = role.ModifiedAt.Local()
 
+		// append the current role to the slice
 		roles = append(roles, role)
-		// assert datetime values
-		//cr := result["createdAt"].(primitive.DateTime)
-		//mo := result["modifiedAt"].(primitive.DateTime)
-
-		// append result to slice
-		// roles = append(roles,
-		// 	models.Role{
-		// 		ID:          result["_id"].(primitive.ObjectID),
-		// 		Name:        result["name"].(string),
-		// 		Description: result["description"].(string),
-		// 		CreatedBy:   result["createdBy"].(string),
-		// 		CreatedAt:   primitive.DateTime(time.Now().Truncate(time.Millisecond).UnixNano() / int64(time.Millisecond)),
-		// 		//CreatedAt:   time.Unix(int64(cr)/1000, int64(cr)%1000*1000000).Format(time.UnixDate),
-		// 		ModifiedBy: result["modifiedBy"].(string),
-		// 		ModifiedAt: primitive.DateTime(time.Now().Truncate(time.Millisecond).UnixNano() / int64(time.Millisecond)),
-		// 		//ModifiedAt:  time.Unix(int64(mo)/1000, int64(mo)%1000*1000000).Format(time.UnixDate),
-		// 	},
-		// )
 	}
 
 	// handle any errors with the cursor
@@ -121,7 +96,7 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func rolesCreateHandler(w http.ResponseWriter, r *http.Request) {
+func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// parse form fields
 	err := r.ParseForm()
@@ -138,48 +113,29 @@ func rolesCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
+
+		// prepare a role to insert
 		role := &models.Role{
 			ID:          primitive.NewObjectID().Hex(),
 			Name:        r.FormValue("name"),
 			Description: r.FormValue("description"),
 			CreatedBy:   session.Values["username"].(string),
-			CreatedAt:   time.Now().UTC(), //primitive.DateTime(time.Now().Truncate(time.Millisecond).UnixNano() / int64(time.Millisecond)),
+			CreatedAt:   time.Now().UTC(),
 			ModifiedBy:  session.Values["username"].(string),
-			ModifiedAt:  time.Now().UTC(), //primitive.DateTime(time.Now().Truncate(time.Millisecond).UnixNano() / int64(time.Millisecond)),
+			ModifiedAt:  time.Now().UTC(),
 		}
-
-		// load session.Values into a bson.D object
-		// var insert bson.D
-
-		// insert = append(insert, bson.E{Key: "name", Value: r.FormValue("name")})
-		// insert = append(insert, bson.E{Key: "description", Value: r.FormValue("description")})
-
-		// insert = append(insert, bson.E{Key: "createdBy", Value: session.Values["username"]})
-		// insert = append(insert, bson.E{Key: "createdAt", Value: primitive.DateTime(time.Now().Truncate(time.Millisecond).UnixNano() / int64(time.Millisecond))})
-		// insert = append(insert, bson.E{Key: "modifiedBy", Value: session.Values["username"]})
-		// insert = append(insert, bson.E{Key: "modifiedAt", Value: primitive.DateTime(time.Now().Truncate(time.Millisecond).UnixNano() / int64(time.Millisecond))})
 
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		// insert session.Values into mongo and get the returned ObjectID
-		_, err = client.Database("test").Collection("roles").InsertOne(ctx,
-			role,
-			// bson.D{
-			// 	{Key: "_id", Value: primitive.NewObjectID().Hex()},
-			// 	{Key: "name", Value: r.FormValue("name")},
-			// 	{Key: "description", Value: r.FormValue("description")},
-			// 	{Key: "createdBy", Value: session.Values["username"].(string)},
-			// 	{Key: "createdAt", Value: time.Now().UTC()},
-			// 	{Key: "modifiedBy", Value: session.Values["modifiedBy"].(string)},
-			// 	{Key: "modifiedAt", Value: time.Now().UTC()},
-			// },
-		)
+		// insert role into mongo
+		_, err = client.Database("test").Collection("roles").InsertOne(ctx, role)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		// put a notification in the session.Values that a role was added
 		addNotification(session, fmt.Sprintf("Role '%s' has been created!", role.Name))
 	}
 
@@ -209,7 +165,51 @@ func rolesCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func rolesUpdateHandler(w http.ResponseWriter, r *http.Request) {
+func roleReadHandler(w http.ResponseWriter, r *http.Request) {
+
+	// get session
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	// initialize a new role
+	var role = new(models.Role)
+
+	// find a role
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	err = client.Database("test").Collection("roles").FindOne(ctx,
+		bson.D{
+			{Key: "_id", Value: vars["id"]},
+		},
+	).Decode(role)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// save session
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	render(w, r, "rolesRead.html",
+		struct {
+			Role *models.Role
+		}{
+
+			Role: role,
+		},
+	)
+}
+
+func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get variables from uri
 	vars := mux.Vars(r)
@@ -237,10 +237,6 @@ func rolesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("role: %v\n", role)
-
-	log.Printf("role: %v\n", role)
-
 	switch r.Method {
 	case "GET":
 		// time is stored in UTC but we want to display local time
@@ -248,10 +244,7 @@ func rolesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		role.ModifiedAt = role.ModifiedAt.Local()
 
 	case "POST":
-		// role.Name = r.FormValue("name")
-		// role.Description = r.FormValue("description")
-		// role.ModifiedAt = time.Now().UTC()
-
+		// update values on the form and modified fields
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		_, err := client.Database("test").Collection("roles").UpdateOne(ctx,
@@ -272,6 +265,7 @@ func rolesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// put a notification in the session.Values that a role was updated
 		addNotification(session, fmt.Sprintf("Role '%s' has been updated!", r.FormValue("name")))
 	}
 
@@ -301,7 +295,7 @@ func rolesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func rolesDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get session
 	session, err := store.Get(r, "session")
@@ -342,6 +336,7 @@ func rolesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// put a notification in the session.Values that a role was deleted
 	addNotification(session, fmt.Sprintf("Role '%s' was deleted!", role.Name))
 
 	// save session
@@ -354,23 +349,17 @@ func rolesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/roles", http.StatusTemporaryRedirect)
 }
 
-// objectIDToHex converts an ObjectID string to ObjectID Hex string
-// example: ObjectID("5cedc3faf23dd22dcf869789") to 5cedc3faf23dd22dcf869789
-// func objectIDToHex(id string) string {
-// 	hexID := strings.TrimPrefix(id, "ObjectID(\"")
-// 	hexID = strings.TrimSuffix(hexID, "\")")
-// 	return hexID
-// }
-
-// func formatDateTime(dt primitive.DateTime) string {
-// 	return time.Unix(int64(dt)/1000, int64(dt)%1000*1000000).Format(time.UnixDate)
-// }
-
+// addNotification adds a notification message to session.Values
 func addNotification(session *sessions.Session, notification string) {
 	session.Values["notification"] = notification
 }
 
+// getNotification returns a notification from session.Values if
+// one exists, otherwise it returns an empty string
+// if a notification was returned, the notification session.Value
+// is emptied
 func getNotification(w http.ResponseWriter, r *http.Request) (string, error) {
+
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
