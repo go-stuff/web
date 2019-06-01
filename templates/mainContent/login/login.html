@@ -1,23 +1,17 @@
 {{define "content"}}
-<div class="tile is-parent is-12">
-    <div class="tile is-child is-4"></div>
-    <div class="tile is-child is-vertical is-4">
-        {{ if .Error }}
-        <div class="error">{{ .Error }}</div>
-        {{ end }}
-        <h1 class="title is-3">Login</h1>
-        <form method="post">
-            <div class="field">
-                <label class="label" for="username">Username</label>
-                <input class="input" type="text" name="username" id="username" value="{{ .Username }}" required pattern="[0-9A-Za-z/\s-]*">
-            </div>
-            <div class="field">
-                <label class="label" for="password">Password</label>
-                <input class="input" type="password" name="password" id="password" required>
-            </div>
-            <input class="button is-primary" type="submit" name="login" value="Login">
-        </form>
+{{ if .Error }}
+<div class="error">{{ .Error }}</div>
+{{ end }}
+<h1 class="title is-3">Login</h1>
+<form method="post">
+    <div class="field">
+        <label class="label" for="username">Username</label>
+        <input class="input" type="text" name="username" id="username" value="{{ .Username }}" required pattern="[0-9A-Za-z/\s-]*">
     </div>
-    <div class="tile is-child is-4"></div>
-</div>
+    <div class="field">
+        <label class="label" for="password">Password</label>
+        <input class="input" type="password" name="password" id="password" required>
+    </div>
+    <input class="button is-primary" type="submit" name="login" value="Login">
+</form>
 {{end}}
