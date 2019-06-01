@@ -16,7 +16,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get data from session.Values
-	user := &models.User {
+	user := &models.User{
 		Username: session.Values["username"].(string),
 	}
 
@@ -27,12 +27,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// render to template
-	render(w, r, "home.html", 
-	struct {
-		User   *models.User
-		Error  error
-	}{
-		User:  user,
-		Error: nil,
-	})
+	render(w, r, "home.html",
+		struct {
+			User  *models.User
+			Error error
+		}{
+			User:  user,
+			Error: nil,
+		})
 }
