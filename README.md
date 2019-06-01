@@ -1,6 +1,7 @@
 # web
 
 [![Build Status](https://cloud.drone.io/api/badges/go-stuff/web/status.svg)](https://cloud.drone.io/go-stuff/web)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-stuff/web)](https://goreportcard.com/report/github.com/go-stuff/web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![Gopher Share](https://github.com/go-stuff/images/blob/master/GOPHER_SHARE_640x320.png)
