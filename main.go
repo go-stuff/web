@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/securecookie"
@@ -26,8 +28,19 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-	// init store (300 seconds == 5 minutes)
-	store, err := initMongoStore(client.Database("test").Collection("sessions"), 300)
+	// set a default session ttl to 20 minutes
+	if os.Getenv("MONGOSTORE_SESSION_TTL") == "" {
+		os.Setenv("MONGOSTORE_SESSION_TTL", strconv.Itoa(20*60))
+	}
+
+	// get the ttl from an environment variable
+	ttl, err := strconv.Atoi(os.Getenv("MONGOSTORE_SESSION_TTL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// init store
+	store, err := initMongoStore(client.Database("test").Collection("sessions"), ttl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,13 +103,13 @@ func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, err
 	// generate an authentication key to use if the GORILLA_SESSION_AUTH_KEY environment
 	// variable is not set
 	if os.Getenv("GORILLA_SESSION_AUTH_KEY") == "" {
-		os.Setenv("GORILLA_SESSION_AUTH_KEY", string(securecookie.GenerateRandomKey(32)))
+		os.Setenv("GORILLA_SESSION_AUTH_KEY", base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32)))
 	}
 
 	// generate an encryption key to use if the GORILLA_SESSION_ENC_KEY environment
 	// variable is not set
 	if os.Getenv("GORILLA_SESSION_ENC_KEY") == "" {
-		os.Setenv("GORILLA_SESSION_ENC_KEY", string(securecookie.GenerateRandomKey(16)))
+		os.Setenv("GORILLA_SESSION_ENC_KEY", base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(16)))
 	}
 
 	store := mongostore.NewMongoStore(
