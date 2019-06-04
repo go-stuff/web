@@ -1,6 +1,8 @@
 {{define "content"}}
 {{ if .Error }}
-<div class="error">{{ .Error }}</div>
+<div class="notification is-danger">
+    {{ .Error }}
+</div>
 {{ end }}
 <h1 class="title is-3">Login</h1>
 <form method="post">
