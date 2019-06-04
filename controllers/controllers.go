@@ -183,6 +183,8 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/roles/update/{id}", roleUpdateHandler).Methods("GET", "POST")
 	router.HandleFunc("/roles/delete/{id}", roleDeleteHandler).Methods("GET")
 
+	router.HandleFunc("/users", usersHandler).Methods("GET")
+
 	router.HandleFunc("/login", loginHandler).Methods("GET", "POST")
 	router.HandleFunc("/logout", loginHandler).Methods("GET")
 

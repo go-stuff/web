@@ -1,13 +1,18 @@
 package controllers
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-stuff/ldap"
 	"github.com/go-stuff/web/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +108,70 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		err = session.Save(r, w)
 		if err != nil {
 			log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %v\n", err.Error())
+		}
+
+		// update user and groups in mongo to use with permissions middleware
+
+		// initialize a new role
+		var findUser = new(models.User)
+
+		// find a role
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("users").FindOne(ctx,
+			bson.D{
+				{Key: "username", Value: user.Username},
+			},
+		).Decode(findUser)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				// If they dont exist, add them
+
+				// prepare a role to insert
+				addUser := &models.User{
+					ID:         primitive.NewObjectID().Hex(),
+					Username:   user.Username,
+					Groups:     user.Groups,
+					CreatedBy:  "System",
+					CreatedAt:  time.Now().UTC(),
+					ModifiedBy: "System",
+					ModifiedAt: time.Now().UTC(),
+				}
+
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+
+				// insert role into mongo
+				_, err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("users").InsertOne(ctx, addUser)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			// If they do exist, update their groups
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			_, err := client.Database(os.Getenv("MONGO_DB_NAME")).Collection("users").UpdateOne(ctx,
+				bson.D{
+					{Key: "username", Value: user.Username},
+				},
+				bson.D{
+					{Key: "$set", Value: bson.D{
+						{Key: "groups", Value: user.Groups},
+						{Key: "modifiedBy", Value: "System"},
+						{Key: "modifiedAt", Value: time.Now().UTC()},
+					}},
+				},
+			)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		http.Redirect(w, r, "/home", http.StatusFound)

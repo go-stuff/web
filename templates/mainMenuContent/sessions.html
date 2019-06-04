@@ -1,7 +1,7 @@
 {{ define "content" }}
 <h1 class="title is-3">Sessions</h1>
 <hr>
-<table class="table">
+<table id="datatable" class="datatable table table-sm table-hover">
     <thead>
         <tr>
             <th scope="col" class="is-hidden-mobile">#</th>
@@ -25,4 +25,11 @@
         {{ end }}
     </tbody>
 </table>
+<script>
+$(document).ready(function() {
+    $('#datatable').DataTable({
+        "order": [[ 1, "asc" ]]
+    });
+});
+</script>
 {{ end }}
