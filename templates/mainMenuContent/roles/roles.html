@@ -27,9 +27,9 @@
                 <td>{{ .Name }}</td>
                 <td>{{ .Description }}</td>
                 <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</td>
+                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
                 <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</td>
+                <td class="is-hidden-mobile">{{ .ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
                 <td>
                     <a class="button is-link is-small" href="/roles/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
                     <a class="button is-info is-small" href="/roles/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>

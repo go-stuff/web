@@ -22,7 +22,7 @@ func Auth(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("middleware/auth.go > INFO > Auth() > store.Get > %v %v\n", session.ID, session.Values)
+		log.Printf("middleware/auth.go > INFO > Auth() > store.Get > %v %v\n", session.ID, session.Values["username"])
 
 		// If this is a new session redirect to the login screen.
 		if session.IsNew && r.RequestURI != "/login" {

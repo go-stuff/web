@@ -20,8 +20,8 @@
                 <td>{{ .Username }}</td>
                 <td>{{ .RemoteAddr }}</td>
                 <td class="is-hidden-mobile">{{ .Host }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedAt }}</td>
-                <td>{{ .ExpiresAt }}</td>
+                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</td>
+                <td>{{ .ExpiresAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
             </tr>
             {{ end }}
         </tbody>

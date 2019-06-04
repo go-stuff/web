@@ -1,10 +1,13 @@
 package models
 
+import "time"
+
 // Session represents a single session conncected to the web site.
 type Session struct {
-	Username   string
-	RemoteAddr string
-	Host       string
-	CreatedAt  string
-	ExpiresAt  string
+	//ID         string    `bson:"_id"`
+	Username   string    `bson:"username"`
+	RemoteAddr string    `bson:"remoteaddr"`
+	Host       string    `bson:"host"`
+	CreatedAt  time.Time `bson:"createdAt"`
+	ExpiresAt  time.Time `bson:"expiresAt"`
 }

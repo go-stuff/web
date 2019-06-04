@@ -169,6 +169,10 @@ func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, err
 		os.Setenv("GORILLA_SESSION_ENC_KEY", base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(16)))
 	}
 
+	// DO NOT PRINT OUT SESSION KEYS
+	// fmt.Println(os.Getenv("GORILLA_SESSION_AUTH_KEY"))
+	// fmt.Println(os.Getenv("GORILLA_SESSION_ENC_KEY"))
+
 	store := mongostore.NewMongoStore(
 		col,
 		age,
