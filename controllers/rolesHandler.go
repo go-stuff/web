@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -29,7 +30,7 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 	// find all roles
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cursor, err := client.Database("test").Collection("roles").Find(ctx,
+	cursor, err := client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").Find(ctx,
 		bson.D{},
 		&options.FindOptions{
 			Sort: bson.D{
@@ -129,7 +130,7 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 
 		// insert role into mongo
-		_, err = client.Database("test").Collection("roles").InsertOne(ctx, role)
+		_, err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").InsertOne(ctx, role)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -182,7 +183,7 @@ func roleReadHandler(w http.ResponseWriter, r *http.Request) {
 	// find a role
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	err = client.Database("test").Collection("roles").FindOne(ctx,
+	err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").FindOne(ctx,
 		bson.D{
 			{Key: "_id", Value: vars["id"]},
 		},
@@ -227,7 +228,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	// find a role
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	err = client.Database("test").Collection("roles").FindOne(ctx,
+	err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").FindOne(ctx,
 		bson.D{
 			{Key: "_id", Value: vars["id"]},
 		},
@@ -247,7 +248,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// update values on the form and modified fields
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		_, err := client.Database("test").Collection("roles").UpdateOne(ctx,
+		_, err := client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").UpdateOne(ctx,
 			bson.D{
 				{Key: "_id", Value: vars["id"]},
 			},
@@ -312,7 +313,7 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// find a role
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	err = client.Database("test").Collection("roles").FindOne(ctx,
+	err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").FindOne(ctx,
 		bson.D{
 			{Key: "_id", Value: vars["id"]},
 		},
@@ -326,7 +327,7 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// delete the ObjectID from roles
-	_, err = client.Database("test").Collection("roles").DeleteOne(ctx,
+	_, err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("roles").DeleteOne(ctx,
 		bson.D{
 			{Key: "_id", Value: vars["id"]},
 		},

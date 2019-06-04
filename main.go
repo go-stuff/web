@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
+	"errors"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -21,6 +24,12 @@ import (
 )
 
 func main() {
+	// init environment
+	err := initEnvironment()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// init database
 	client, ctx, err := initMongoClient()
 	if err != nil {
@@ -39,8 +48,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// get database name from an environment variable
+	if os.Getenv("MONGO_DB_NAME") == "" {
+		os.Setenv("MONGO_DB_NAME", "test")
+	}
+
 	// init store
-	store, err := initMongoStore(client.Database("test").Collection("sessions"), ttl)
+	store, err := initMongoStore(client.Database(os.Getenv("MONGO_DB_NAME")).Collection("sessions"), ttl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,6 +83,49 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func initEnvironment() error {
+	_, err := os.Stat(".env")
+	if os.IsNotExist(err) {
+		log.Println("main.go > INFO > .env does not exist")
+	} else {
+		log.Println("main.go > INFO > .env loaded")
+		// open .env
+		file, err := os.Open(".env")
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// read each line
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			if scanner.Text() != "" {
+				regex := regexp.MustCompile(`([a-zA-Z0-9-_]*)\s*=\s*"(.*)"`)
+				matches := regex.FindStringSubmatch(scanner.Text())
+				if len(matches) != 3 {
+					return errors.New("error in .env")
+				}
+
+				// []matches = [0]line, [1](group1), [2](group2)
+				err := os.Setenv(matches[1], matches[2])
+				if err != nil {
+					return err
+				}
+
+				// DO NOT PRINT ENVIRONMENT VARIABLES OUT
+				// fmt.Printf("env:%s = %s\n", matches[1], os.Getenv(matches[1]))
+			}
+		}
+
+		// catch scanner errors
+		err = scanner.Err()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func initMongoClient() (*mongo.Client, context.Context, error) {

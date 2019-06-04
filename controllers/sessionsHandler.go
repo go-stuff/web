@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-stuff/web/models"
@@ -28,7 +29,7 @@ func sessionsHandler(w http.ResponseWriter, r *http.Request) {
 	// find all sessions
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cursor, err := client.Database("test").Collection("sessions").Find(ctx, bson.D{})
+	cursor, err := client.Database(os.Getenv("MONGO_DB_NAME")).Collection("sessions").Find(ctx, bson.D{})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

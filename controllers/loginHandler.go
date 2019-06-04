@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-stuff/ldap"
 	"github.com/go-stuff/web/models"
@@ -49,18 +50,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		// if local account was not found check ldap
 		if !found {
 			username, groups, err := ldap.Auth(
-				"192.168.1.100",               // LDAP_SERVER
-				"636",                         // LDAP_PORT
-				"cn=admin,dc=go-stuff,dc=ca",  // LDAP_BIND_DN
-				"password",                    // LDAP_BIND_PASS
-				"ou=people,dc=go-stuff,dc=ca", // LDAP_USER_BASE_DN
-				"uid",                         // LDAP_USER_SEARCH_ATTR
-				"ou=group,dc=go-stuff,dc=ca",  // LDAP_GROUP_BASE_DN
-				"posixGroup",                  // LDAP_GROUP_OBJECT_CLASS
-				"memberUid",                   // LDAP_GROUP_SEARCH_ATTR
-				"false",                       // LDAP_GROUP_SEARCH_FULL
-				r.FormValue("username"),       // Username
-				r.FormValue("password"),       // Password
+				os.Getenv("LDAP_SERVER"),
+				os.Getenv("LDAP_PORT"),
+				os.Getenv("LDAP_BIND_DN"),
+				os.Getenv("LDAP_BIND_PASS"),
+				os.Getenv("LDAP_USER_BASE_DN"),
+				os.Getenv("LDAP_USER_SEARCH_ATTR"),
+				os.Getenv("LDAP_GROUP_BASE_DN"),
+				os.Getenv("LDAP_GROUP_OBJECT_CLASS"),
+				os.Getenv("LDAP_GROUP_SEARCH_ATTR"),
+				os.Getenv("LDAP_GROUP_SEARCH_FULL"),
+				r.FormValue("username"),
+				r.FormValue("password"),
 			)
 			if err != nil {
 				render(w, r, "login.html",
