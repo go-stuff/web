@@ -2,8 +2,7 @@ package models
 
 import "time"
 
-// Role represents the level of permissions a user has
-// on the web site.
+// Role represents the level of permissions a user has on the web site.
 type Role struct {
 	ID          string    `bson:"_id"`
 	Name        string    `bson:"name"`

@@ -16,6 +16,8 @@ import (
 var (
 	client    *mongo.Client
 	store     *mongostore.MongoStore
+	router    *mux.Router
+	routes    []string
 	layout    *template.Template
 	templates map[string]*template.Template
 )
@@ -31,7 +33,7 @@ func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore) *mux.Rou
 		log.Fatal(err)
 	}
 
-	router := initRouter()
+	router = initRouter()
 
 	return router
 }
@@ -182,6 +184,8 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/roles/read/{id}", roleReadHandler).Methods("GET")
 	router.HandleFunc("/roles/update/{id}", roleUpdateHandler).Methods("GET", "POST")
 	router.HandleFunc("/roles/delete/{id}", roleDeleteHandler).Methods("GET")
+
+	router.HandleFunc("/routes", routesHandler).Methods("GET")
 
 	router.HandleFunc("/users", usersHandler).Methods("GET")
 

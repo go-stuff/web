@@ -4,7 +4,7 @@ import "time"
 
 // Session represents a single session conncected to the web site.
 type Session struct {
-	//ID         string    `bson:"_id"`
+	ID         string    `bson:"_id"`
 	Username   string    `bson:"username"`
 	RemoteAddr string    `bson:"remoteaddr"`
 	Host       string    `bson:"host"`

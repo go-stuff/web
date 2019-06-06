@@ -4,11 +4,21 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // Auth middleware authenticates users
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		currentRoute := mux.CurrentRoute(r)
+		pathTemplate, _ := currentRoute.GetPathTemplate()
+
+		// get variables from uri
+		//vars := mux.Vars(r)
+		log.Printf("\n\nr.RequestURI: %v\npathTemplate: %v\n\n", r.RequestURI, pathTemplate)
+
 		log.Printf("middleware/auth.go > INFO > Auth() > method: %v, %v\n", r.Method, r.RequestURI)
 
 		// Only process files that are not in the /static/ folder and not the favicon,ico.

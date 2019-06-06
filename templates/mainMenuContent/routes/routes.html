@@ -1,0 +1,37 @@
+{{ define "content" }}
+{{ if .Notification }}
+<div class="notification is-success">
+    {{ .Notification }}
+</div>
+{{ end }}
+<h1 class="title is-3">Routes</h1>
+<hr>
+<div id="hide" style="display: none;">
+    <table id="datatable" class="datatable table table-sm table-hover">
+        <thead>
+            <tr>
+                <th scope="col" class="is-hidden-mobile">#</th>
+                <th scope="col">Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range $index, $results := .Routes }}
+            <tr>
+                <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
+                <td>{{ . }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#datatable').DataTable({
+            "order": [[ 1, "asc" ]],
+            "initComplete": function() {
+                $('#hide').show();
+            }
+        });
+    });
+</script>
+{{ end }}
