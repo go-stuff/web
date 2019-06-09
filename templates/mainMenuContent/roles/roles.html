@@ -1,12 +1,17 @@
 {{ define "content" }}
 {{ if .Notification }}
 <div class="notification is-success">
+    <button class="delete"></button>
     {{ .Notification }}
 </div>
 {{ end }}
 <h1 class="title is-3">Roles</h1>
 <hr>
-<div id="hide" style="display: none;">
+<div id="hide" >
+    <script>
+        var hide = document.getElementById("hide");
+        hide.style.display = "none";
+    </script>
     <table id="datatable" class="datatable table table-sm table-hover">
         <thead>
             <tr>
@@ -49,6 +54,14 @@
             "initComplete": function() {
                 $('#hide').show();
             }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+        (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+            $notification = $delete.parentNode;
+            $delete.addEventListener('click', () => {
+                $notification.parentNode.removeChild($notification);
+            });
         });
     });
 </script>

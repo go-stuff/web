@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/securecookie"
 
 	"github.com/go-stuff/mongostore"
@@ -65,7 +66,37 @@ func main() {
 	// init middlware
 	middleware.Init(store)
 
+	// generate an csrf key to use if the GORILLA_CSRF_KEY environment
+	// variable is not set
+	if os.Getenv("GORILLA_CSRF_KEY") == "" {
+		os.Setenv("GORILLA_CSRF_KEY", base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32)))
+	}
+
+	// Generate Keys
+	// fmt.Println(base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32)))
+
+	// All POST requests without a valid token will return HTTP 403 Forbidden.
+	// We should also ensure that our mutating (non-idempotent) handler only
+	// matches on POST requests. We can check that here, at the router level, or
+	// within the handler itself via r.Method.
+	middlewareCSRF := csrf.Protect(
+		[]byte(os.Getenv("GORILLA_CSRF_KEY")),
+		// PS: Don't forget to pass csrf.Secure(false) if you're developing locally
+		// over plain HTTP (just don't leave it on in production).
+		csrf.Secure(false),
+	)
+
+	// if os.Getenv("ENVIRONMENT") != "production" {
+	// 	middlewareCSRF = csrf.Protect(
+	// 		[]byte(os.Getenv("GORILLA_CSRF_KEY")),
+	// 		// PS: Don't forget to pass csrf.Secure(false) if you're developing locally
+	// 		// over plain HTTP (just don't leave it on in production).
+	// 		csrf.Secure(false),
+	// 	)
+	// }
+
 	// apply middleware
+	router.Use(middlewareCSRF)
 	router.Use(middleware.Auth)
 
 	// init server
@@ -172,6 +203,10 @@ func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, err
 	// DO NOT PRINT OUT SESSION KEYS
 	// fmt.Println(os.Getenv("GORILLA_SESSION_AUTH_KEY"))
 	// fmt.Println(os.Getenv("GORILLA_SESSION_ENC_KEY"))
+
+	// Generate Keys
+	// fmt.Println(base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32)))
+	// fmt.Println(base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(16)))
 
 	store := mongostore.NewMongoStore(
 		col,

@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/go-stuff/ldap"
 	"github.com/go-stuff/web/models"
+	"github.com/gorilla/csrf"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,7 +26,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		render(w, r, "login.html", nil)
+		render(w, r, "login.html",
+			struct {
+				CSRF     template.HTML
+				Username string
+				Error    error
+			}{
+				CSRF:     csrf.TemplateField(r),
+				Username: r.FormValue("username"),
+				Error:    nil,
+			})
 
 	case "POST":
 		// start a new session
@@ -71,9 +82,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				render(w, r, "login.html",
 					struct {
+						CSRF     template.HTML
 						Username string
 						Error    error
 					}{
+						CSRF:     csrf.TemplateField(r),
 						Username: r.FormValue("username"),
 						Error:    err,
 					})
@@ -90,9 +103,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		if !found {
 			render(w, r, "login.html",
 				struct {
+					CSRF     template.HTML
 					Username string
 					Error    error
 				}{
+					CSRF:     csrf.TemplateField(r),
 					Username: r.FormValue("username"),
 					Error:    errors.New("username not found"),
 				})

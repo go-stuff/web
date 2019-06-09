@@ -3,10 +3,12 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 
@@ -152,10 +154,12 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		render(w, r, "rolesUpsert.html",
 			struct {
+				CSRF   template.HTML
 				Title  string
 				Role   *models.Role
 				Action string
 			}{
+				CSRF:   csrf.TemplateField(r),
 				Title:  "Create Role",
 				Role:   new(models.Role),
 				Action: "Create",
@@ -281,10 +285,12 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		render(w, r, "rolesUpsert.html",
 			struct {
+				CSRF   template.HTML
 				Title  string
 				Role   *models.Role
 				Action string
 			}{
+				CSRF:   csrf.TemplateField(r),
 				Title:  "Update Role",
 				Role:   role,
 				Action: "Update",
