@@ -7,12 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/go-stuff/grpc/api"
 	"github.com/go-stuff/ldap"
 	"github.com/go-stuff/web/models"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/csrf"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -119,74 +121,58 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		session.Values["host"] = r.Host
 		session.Values["username"] = user.Username
 
-		// save the session
-		err = session.Save(r, w)
-		if err != nil {
-			log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %v\n", err.Error())
-		}
-
 		// update user and groups in mongo to use with permissions middleware
-
-		// initialize a new role
-		var findUser = new(models.User)
-
-		// find a role
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("users").FindOne(ctx,
-			bson.D{
-				{Key: "username", Value: user.Username},
-			},
-		).Decode(findUser)
+		userSvc := api.NewUserServiceClient(apiClient)
+		req := new(api.UserByUsernameReq)
+		req.Username = user.Username
+		foundRes, err := userSvc.ByUsername(ctx, req)
 		if err != nil {
-			if err == mongo.ErrNoDocuments {
+			if strings.Contains(err.Error(), mongo.ErrNoDocuments.Error()) {
 				// If they dont exist, add them
-
-				// prepare a role to insert
-				addUser := &models.User{
+				req := new(api.UserCreateReq)
+				req.User = &api.User{
 					ID:         primitive.NewObjectID().Hex(),
 					Username:   user.Username,
 					Groups:     user.Groups,
 					CreatedBy:  "System",
-					CreatedAt:  time.Now().UTC(),
+					CreatedAt:  ptypes.TimestampNow(),
 					ModifiedBy: "System",
-					ModifiedAt: time.Now().UTC(),
+					ModifiedAt: ptypes.TimestampNow(),
 				}
-
 				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 				defer cancel()
-
-				// insert role into mongo
-				_, err = client.Database(os.Getenv("MONGO_DB_NAME")).Collection("users").InsertOne(ctx, addUser)
+				_, err := userSvc.Create(ctx, req)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		} else {
 			// If they do exist, update their groups
+			req := new(api.UserUpdateReq)
+			req.User = new(api.User)
+			req.User.ID = foundRes.User.ID
+			req.User.Username = user.Username
+			req.User.Groups = user.Groups
+			req.User.ModifiedBy = "System"
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
-			_, err := client.Database(os.Getenv("MONGO_DB_NAME")).Collection("users").UpdateOne(ctx,
-				bson.D{
-					{Key: "username", Value: user.Username},
-				},
-				bson.D{
-					{Key: "$set", Value: bson.D{
-						{Key: "groups", Value: user.Groups},
-						{Key: "modifiedBy", Value: "System"},
-						{Key: "modifiedAt", Value: time.Now().UTC()},
-					}},
-				},
-			)
+			_, err := userSvc.Update(ctx, req)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+		}
+
+		// save the session
+		err = session.Save(r, w)
+		if err != nil {
+			log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %v\n", err.Error())
 		}
 
 		http.Redirect(w, r, "/home", http.StatusFound)

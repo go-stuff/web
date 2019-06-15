@@ -14,6 +14,7 @@ import (
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/securecookie"
+	"google.golang.org/grpc"
 
 	"github.com/go-stuff/mongostore"
 	"github.com/go-stuff/web/controllers"
@@ -38,6 +39,9 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
+	apiClient, err := initAPI()
+	defer apiClient.Close()
+
 	// set a default session ttl to 20 minutes
 	if os.Getenv("MONGOSTORE_SESSION_TTL") == "" {
 		os.Setenv("MONGOSTORE_SESSION_TTL", strconv.Itoa(20*60))
@@ -61,7 +65,7 @@ func main() {
 	}
 
 	// init controllers
-	router := controllers.Init(client, store)
+	router := controllers.Init(client, store, apiClient)
 
 	// init middlware
 	middleware.Init(store)
@@ -216,4 +220,12 @@ func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, err
 	)
 
 	return store, nil
+}
+
+func initAPI() (*grpc.ClientConn, error) {
+	conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }

@@ -1,11 +1,11 @@
-{{define "content"}}
+{{ define "content" }}
 <h1 class="title is-3">Role</h1>
 <hr>
 <p><strong>Name:</strong> {{ .Role.Name }}</p>    
 <p><strong>Description:</strong> {{ .Role.Description }}</p>
 {{ if .Role.CreatedBy }}
 <hr>
-<p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ .Role.CreatedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</p>
-<p><strong>Modified by:</strong> {{ .Role.ModifiedBy }} @ {{ .Role.ModifiedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</p>
+<p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ timestamp .Role.CreatedAt }}</p>
+<p><strong>Modified by:</strong> {{ .Role.ModifiedBy }} @ {{ timestamp .Role.ModifiedAt }}</p>
 {{ end }}
-{{end}}
+{{ end }}

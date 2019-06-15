@@ -1,4 +1,4 @@
-{{define "content"}}
+{{ define "content" }}
 <h1 class="title is-3">{{ .Title }}</h1>
 <hr>
 <form method="post">
@@ -19,4 +19,4 @@
 <p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ .Role.CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</p>
 <p><strong>Modified by:</strong> {{ .Role.ModifiedBy }} @ {{ .Role.ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</p>
 {{ end }}
-{{end}}
+{{ end }}

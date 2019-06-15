@@ -8,6 +8,6 @@ type Session struct {
 	Username   string    `bson:"username"`
 	RemoteAddr string    `bson:"remoteaddr"`
 	Host       string    `bson:"host"`
-	CreatedAt  time.Time `bson:"createdAt"`
-	ExpiresAt  time.Time `bson:"expiresAt"`
+	CreatedAt  time.Time `bson:"createdat"`
+	ExpiresAt  time.Time `bson:"expiresat"`
 }

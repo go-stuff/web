@@ -1,0 +1,61 @@
+{{define "content"}}
+<h1 class="title is-3">{{ .Title }}</h1>
+<hr>
+<form method="post">
+    {{ .CSRF }}
+
+    <div class="field">
+        <label class="label" for="os">Operating System</label>
+        <div class="select">
+            <select>
+                <option>Linux</option>
+                <option>Windows</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="windowsversion">Windows Version</label>
+        <div class="select">
+            <select>
+                <option>Windows Server 2012</option>
+                <option>Windows Server 2016</option>
+                <option>etc...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="linuxversion">Linux Version</label>
+        <div class="select">
+            <select>
+                <option>Red Hat Enterprize 7.3</option>
+                <option>Red Hat Enterprise 8.0</option>
+                <option>etc...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="infoblox">Get IP from Infoblox</label>
+        <div class="select">
+            <select>
+                <option>DC1 (X.X.X.0/24)</option>
+                <option>DC2 (Y.Y.Y.0/24)</option>
+                <option>DC6 (Z.Z.Z.0/24)</option>
+                <option>DMZ DC1 (X.X.X.0/24)</option>
+                <option>DMZ DC2 (Y.Y.Y.0/24)</option>
+                <option>DMZ DC6 (Z.Z.Z.0/24)</option>
+            </select>
+        </div>
+    </div>
+
+    <input class="button is-primary" type="submit" name="add" value="{{ .Action }}">
+    <a class="button is-secondary" href="/servers">Cancel</a>
+</form>
+{{ if .Role.CreatedBy }}
+<hr>
+<p><strong>Created by:</strong> {{ .Server.CreatedBy }} @ {{ .Server.CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</p>
+<p><strong>Modified by:</strong> {{ .Server.ModifiedBy }} @ {{ .Server.ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</p>
+{{ end }}
+{{ end }}

@@ -7,14 +7,19 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/go-stuff/mongostore"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"go.mongodb.org/mongo-driver/mongo"
+	"google.golang.org/grpc"
 )
 
 var (
 	client    *mongo.Client
+	apiClient *grpc.ClientConn
 	store     *mongostore.MongoStore
 	router    *mux.Router
 	routes    []string
@@ -24,9 +29,10 @@ var (
 
 // Init gets the store pointer from main.go and returns a router
 // pointer to main.go
-func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore) *mux.Router {
+func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore, apiclient *grpc.ClientConn) *mux.Router {
 	client = mongoclient
 	store = mongostore
+	apiClient = apiclient
 
 	err := initTemplates()
 	if err != nil {
@@ -76,6 +82,8 @@ func initTemplatesWithContent() error {
 		return err
 	}
 
+	layout.Funcs(timestampFM())
+
 	// recurse content files templates and build separate templates for each of them
 	filepath.Walk("./templates/mainContent", walkTemplatesPath)
 
@@ -100,6 +108,8 @@ func initTemplatesWithNavAndContent() error {
 	if err != nil {
 		return err
 	}
+
+	layout.Funcs(timestampFM())
 
 	// recurse content files templates and build separate templates for each of them
 	filepath.Walk("./templates/mainMenuContent", walkTemplatesPath)
@@ -128,6 +138,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 
 		// clone the base template
 		content := template.Must(layout.Clone())
+		content.Funcs(timestampFM())
 
 		// merge the base template and fileContents
 		_, err = content.Parse(string(fileContents))
@@ -151,13 +162,17 @@ func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{
 	// var tpl bytes.Buffer
 	// e := templates[tmpl].Execute(&tpl, data)
 	// if e != nil {
-	// 	log.Debug(tmpl)
-	// 	log.Error(e)
+	// 	log.Println(tmpl)
+
 	// }
-	// log.Debug(tpl.String())
+	// log.Println(e)
+	// log.Printf("\ntmpl: %v\n", templates[tmpl])
+	// log.Printf("\nbytes: %v\n", tpl.String())
 
 	// Set the content type.
 	w.Header().Set("Content-Type", "text/html")
+
+	//templates[tmpl].Funcs(timestampFM())
 
 	// Execute the template.
 	err := templates[tmpl].Execute(w, data)
@@ -176,7 +191,9 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/", rootHandler).Methods("GET", "POST")
 	router.HandleFunc("/home", homeHandler).Methods("GET")
 
-	router.HandleFunc("/test", testHandler).Methods("GET")
+	router.HandleFunc("/servers", serversHandler).Methods("GET")
+	router.HandleFunc("/servers/create", serverCreateHandler).Methods("GET", "POST")
+
 	router.HandleFunc("/sessions", sessionsHandler).Methods("GET")
 
 	router.HandleFunc("/roles", rolesHandler).Methods("GET")
@@ -196,4 +213,51 @@ func initRouter() *mux.Router {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	return router
+}
+
+// format timestamps
+func timestampFM() template.FuncMap {
+	return template.FuncMap{
+		"timestamp": func(ts timestamp.Timestamp) string {
+			return time.Unix(ts.Seconds, int64(ts.Nanos)).Format("2006-Jan-02 03:04:05 PM MST")
+		},
+	}
+}
+
+// addNotification adds a notification message to session.Values
+func addNotification(session *sessions.Session, notification string) {
+	session.Values["notification"] = notification
+}
+
+// getNotification returns a notification from session.Values if
+// one exists, otherwise it returns an empty string
+// if a notification was returned, the notification session.Value
+// is emptied
+func getNotification(w http.ResponseWriter, r *http.Request) (string, error) {
+
+	// get session
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", err
+	}
+
+	var notification string
+
+	if session.Values["notification"] == nil {
+		notification = ""
+	} else {
+		notification = session.Values["notification"].(string)
+	}
+
+	session.Values["notification"] = ""
+
+	// save session
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", err
+	}
+
+	return notification, nil
 }

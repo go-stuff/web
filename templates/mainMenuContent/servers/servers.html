@@ -5,7 +5,7 @@
     {{ .Notification }}
 </div>
 {{ end }}
-<h1 class="title is-3">Roles</h1>
+<h1 class="title is-3">Servers</h1>
 <hr>
 <div id="hide" >
     <script>
@@ -26,26 +26,26 @@
             </tr>
         </thead>
         <tbody>
-            {{ range $index, $results := .Roles }}
+            {{ range $index, $results := .Servers }}
             <tr>
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
                 <td>{{ .Name }}</td>
                 <td>{{ .Description }}</td>
                 <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
+                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
                 <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .ModifiedAt }}</td>
+                <td class="is-hidden-mobile">{{ .ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
                 <td>
-                    <a class="button is-link is-small" href="/roles/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
-                    <a class="button is-info is-small" href="/roles/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
-                    <a class="button is-danger is-small" href="/roles/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>
+                    <a class="button is-link is-small" href="/servers/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
+                    <a class="button is-info is-small" href="/servers/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
+                    <a class="button is-danger is-small" href="/servers/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>
                 </td>
             </tr>
             {{ end }}
         </tbody>
     </table>
     <hr>
-    <a class="button is-primary" href="/roles/create">Create</a>
+    <a class="button is-primary" href="/servers/create">Create</a>
 </div>
 <script>
     $(document).ready(function() {

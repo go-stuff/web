@@ -34,7 +34,7 @@ func Auth(next http.Handler) http.Handler {
 			contentType = "text/plain"
 		}
 
-		log.Printf("middleware/header.go > INFO > Header() > method: %v, %v, content type: %v\n", r.Method, r.RequestURI, contentType)
+		//log.Printf("middleware/header.go > INFO > Header() > method: %v, %v, content type: %v\n", r.Method, r.RequestURI, contentType)
 
 		//log.Debug(contentType)
 
@@ -58,11 +58,12 @@ func Auth(next http.Handler) http.Handler {
 		currentRoute := mux.CurrentRoute(r)
 		pathTemplate, _ := currentRoute.GetPathTemplate()
 
+		_ = pathTemplate
 		// get variables from uri
 		//vars := mux.Vars(r)
-		log.Printf("\n\nr.RequestURI: %v\npathTemplate: %v\n\n", r.RequestURI, pathTemplate)
+		//log.Printf("\n\nr.RequestURI: %v\npathTemplate: %v\n\n", r.RequestURI, pathTemplate)
 
-		log.Printf("middleware/auth.go > INFO > Auth() > method: %v, %v\n", r.Method, r.RequestURI)
+		//log.Printf("middleware/auth.go > INFO > Auth() > method: %v, %v\n", r.Method, r.RequestURI)
 
 		// Only process files that are not in the /static/ folder and not the favicon,ico.
 		if strings.Contains(r.RequestURI, "/static/") || strings.Contains(r.RequestURI, "/favicon.ico") {
@@ -72,6 +73,7 @@ func Auth(next http.Handler) http.Handler {
 
 		session, err := store.Get(r, "session")
 		if err != nil {
+			log.Printf("middleware/auth.go > ERROR > Auth() > store.Get > %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -94,7 +96,7 @@ func Auth(next http.Handler) http.Handler {
 			// Save the session.
 			err = store.Save(r, w, session)
 			if err != nil {
-				log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %v\n", err.Error())
+				log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %s\n", err.Error())
 			}
 
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
