@@ -42,6 +42,14 @@ github.com/go-stuff/grpc v0.0.0-20190616220639-236e956f3c66 h1:0edVu+PLllDTZS3C6
 github.com/go-stuff/grpc v0.0.0-20190616220639-236e956f3c66/go.mod h1:FtRCdEyC5e5L3yHfCjAX/BthLwjUZVjpZKxCxDK68P0=
 github.com/go-stuff/grpc v0.0.0-20190616223121-1cd75371f89b h1:IcfsWXW8h6IGL77ORZCeVDhwHqwqHjKHm3kpuq/iHz8=
 github.com/go-stuff/grpc v0.0.0-20190616223121-1cd75371f89b/go.mod h1:FtRCdEyC5e5L3yHfCjAX/BthLwjUZVjpZKxCxDK68P0=
+github.com/go-stuff/grpc v0.0.0-20190617151905-6fdb9267433d h1:W+tp+SOCIJ5Uej9NThjOduISMHVQBCwJ7TwYI6w5FfQ=
+github.com/go-stuff/grpc v0.0.0-20190617151905-6fdb9267433d/go.mod h1:FtRCdEyC5e5L3yHfCjAX/BthLwjUZVjpZKxCxDK68P0=
+github.com/go-stuff/grpc v0.0.0-20190617172850-0f05876421ca h1:ijmwaHIgB7O2NzKUV9EdwoeMpwn8C/qMmXyUasGjx7M=
+github.com/go-stuff/grpc v0.0.0-20190617172850-0f05876421ca/go.mod h1:FtRCdEyC5e5L3yHfCjAX/BthLwjUZVjpZKxCxDK68P0=
+github.com/go-stuff/grpc v0.0.0-20190617173040-50ab8f440565 h1:l8kJGgb0vS2Tz86BVZcp2+uCcrM+iCy2sZ34GlAxPMg=
+github.com/go-stuff/grpc v0.0.0-20190617173040-50ab8f440565/go.mod h1:sDpH/O6np4TRrl7VJdfgh57JF81womf8owqWDN/gbs4=
+github.com/go-stuff/grpc v0.0.0-20190617181813-c2049f1da2ef h1:Exn7qo8MJaBrm9prnRf57b37Xc3h4KLmJC9EB74kpFA=
+github.com/go-stuff/grpc v0.0.0-20190617181813-c2049f1da2ef/go.mod h1:sDpH/O6np4TRrl7VJdfgh57JF81womf8owqWDN/gbs4=
 github.com/go-stuff/ldap v0.0.2 h1:7OGTxAR1kEUlwQCErSpd97b7h8GLruBxggbHdaUM5Vg=
 github.com/go-stuff/ldap v0.0.2/go.mod h1:BgYemTEa4GEutzCQpXmm9+eLDMSsuMb8a0j7zRFrrEs=
 github.com/go-stuff/mongostore v0.1.0 h1:A8PyQI88QftVMLF1cRFASppMjaWF4W6Ecl089JmE22k=

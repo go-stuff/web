@@ -11,23 +11,26 @@
         <thead>
             <tr>
                 <th scope="col" class="is-hidden-mobile">#</th>
+                <th scope="col">RoleID</th>
                 <th scope="col">Role</th>
-                <th scope="col">Name</th>
+                <th scope="col">Route</th>
                 <th scope="col">Permission</th>
             </tr>
         </thead>
         <tbody>
-            {{ range $index, $results := .Routes }}
+            {{ range $index, $route := .Routes }}
             <tr>
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                <td>Role</td>
-                <td>{{ . }}</td>
+                <td>{{ .RoleID }}</td>
                 <td>
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="c{{ $index }}" id="c{{ $index }}" onchange="toggleCheckbox(this)" {{ if .Permission }}checked{{ end }}>
-                        <label class="custom-control-label" for="c{{ $index }}" >Select</label>
-                    </div>
+                    {{ range $role := $.Roles }}
+                        {{ if eq $role.ID $route.RoleID }}
+                            {{ $role.Name }}
+                        {{ end }}
+                    {{ end }}
                 </td>
+                <td>{{ .Path }}</td>
+                <td>{{ .Permission }}</td>
             </tr>
             {{ end }}
         </tbody>

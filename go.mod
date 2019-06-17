@@ -4,8 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.40.0 // indirect
-	github.com/favadi/protoc-go-inject-tag v0.0.0-20181008023834-c2c1884c833d // indirect
-	github.com/go-stuff/grpc v0.0.0-20190616223121-1cd75371f89b
+	github.com/go-stuff/grpc v0.0.0-20190617181813-c2049f1da2ef
 	github.com/go-stuff/ldap v0.0.2
 	github.com/go-stuff/mongostore v0.1.11
 	github.com/gogo/protobuf v1.2.1 // indirect
