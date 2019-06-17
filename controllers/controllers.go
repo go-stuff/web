@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-stuff/grpc/api"
 	"github.com/go-stuff/mongostore"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/mux"
@@ -18,13 +20,14 @@ import (
 )
 
 var (
-	client    *mongo.Client
-	apiClient *grpc.ClientConn
-	store     *mongostore.MongoStore
-	router    *mux.Router
-	routes    []string
-	layout    *template.Template
-	templates map[string]*template.Template
+	client      *mongo.Client
+	apiClient   *grpc.ClientConn
+	store       *mongostore.MongoStore
+	router      *mux.Router
+	routes      []string
+	layout      *template.Template
+	templates   map[string]*template.Template
+	permissions map[string]string
 )
 
 // Init gets the store pointer from main.go and returns a router
@@ -40,6 +43,8 @@ func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore, apiclien
 	}
 
 	router = initRouter()
+
+	initPermissions()
 
 	return router
 }
@@ -149,7 +154,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 		// add the merged content to the templates map
 		templates[fileInfo.Name()] = content
 
-		log.Printf("controllers/controllers.go > INFO > - %s", fileInfo.Name())
+		log.Printf("controllers/controllers.go > INFO > walkTemplatesPath(): - %s", fileInfo.Name())
 	}
 
 	return nil
@@ -157,7 +162,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 
 // render templates with data
 func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{}) {
-	log.Printf("controllers/controllers.go > INFO > render() > %s", tmpl)
+	log.Printf("controllers/controllers.go > INFO > render(): %s", tmpl)
 
 	// var tpl bytes.Buffer
 	// e := templates[tmpl].Execute(&tpl, data)
@@ -177,7 +182,7 @@ func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{
 	// Execute the template.
 	err := templates[tmpl].Execute(w, data)
 	if err != nil {
-		log.Printf("controllers.go > ERROR > render() > %v", err)
+		log.Printf("controllers.go > ERROR > render(): %v", err)
 		//fmt.Println(err)
 	}
 }
@@ -205,6 +210,8 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/routes", routesHandler).Methods("GET")
 
 	router.HandleFunc("/users", usersHandler).Methods("GET")
+	router.HandleFunc("/users/update/{id}", userUpdateHandler).Methods("GET", "POST")
+	router.HandleFunc("/users/delete/{id}", userDeleteHandler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("GET", "POST")
 	router.HandleFunc("/logout", loginHandler).Methods("GET")
@@ -213,6 +220,27 @@ func initRouter() *mux.Router {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	return router
+}
+
+func initPermissions() error {
+	// call api to get a slice of permissions
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	svc :=  api.NewPermissionServiceClient(apiClient)
+	req := new(api.PermissionSliceReq)
+	slice, err := svc.Slice(ctx, req)
+	if err != nil {
+		log.Printf("controllers/controllers.go > ERROR > svc.Slice(): %s\n", err.Error())
+		return err
+	}
+
+	permissions = make(map[string]string)
+
+for _, permission := range slice.Permissions {
+	permissions[permission.RoleID] = permission.Route
+}
+
+return nil
 }
 
 // format timestamps
@@ -238,6 +266,7 @@ func getNotification(w http.ResponseWriter, r *http.Request) (string, error) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
+		log.Printf("controllers/controllers.go > ERROR > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return "", err
 	}
@@ -255,6 +284,7 @@ func getNotification(w http.ResponseWriter, r *http.Request) (string, error) {
 	// save session
 	err = session.Save(r, w)
 	if err != nil {
+		log.Printf("controllers/controllers.go > ERROR > session.Save(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return "", err
 	}

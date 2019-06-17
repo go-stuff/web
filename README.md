@@ -13,11 +13,20 @@ Web page using Gorilla web toolkit and MongoDB Driver.
 ## Kubernetes
 
 To deploy in Kubernetes run the following in the root dir:
+
 ```
 kubectl apply -R -f deploy/
 ```
 
 This will deploy an instance of mongodb along with the demo web app.
+
+# Certs
+
+I have included some test certs in the package to connect with `go-stuff\grpc`. You can generate them the following way:
+
+``` bash
+go run GOROOT/src/crypto/tls/generate_cert.go --host 127.0.0.1 --duration 17520h
+```
 
 ## License
 

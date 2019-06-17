@@ -11,14 +11,23 @@
         <thead>
             <tr>
                 <th scope="col" class="is-hidden-mobile">#</th>
+                <th scope="col">Role</th>
                 <th scope="col">Name</th>
+                <th scope="col">Permission</th>
             </tr>
         </thead>
         <tbody>
             {{ range $index, $results := .Routes }}
             <tr>
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
+                <td>Role</td>
                 <td>{{ . }}</td>
+                <td>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" name="c{{ $index }}" id="c{{ $index }}" onchange="toggleCheckbox(this)" {{ if .Permission }}checked{{ end }}>
+                        <label class="custom-control-label" for="c{{ $index }}" >Select</label>
+                    </div>
+                </td>
             </tr>
             {{ end }}
         </tbody>
@@ -33,5 +42,18 @@
             }
         });
     });
+    // Since Go ParseForm is unable to collect data from the paginated checkboxes that 
+    // are out of view. Hidden form inputs that match the checkboxes have been added
+    // to collect checkbox data.
+    function toggleCheckbox(element)
+    {
+        var name = $(element).attr("name");
+        var hiddenName = "#hidden" + name;
+        if ($(element).is(":checked")) { 
+            $(hiddenName).val("checked");
+        } else {
+            $(hiddenName).val("");
+        }
+    }
 </script>
 {{ end }}

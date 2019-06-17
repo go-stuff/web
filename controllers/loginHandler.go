@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-stuff/grpc/api"
 	"github.com/go-stuff/ldap"
-	"github.com/go-stuff/web/models"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/csrf"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,7 +22,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	// parse form fields
 	err := r.ParseForm()
 	if err != nil {
-		log.Printf("controllers/loginHandler.go > ERROR > r.ParseForm(): %v\n", err.Error())
+		log.Printf("controllers/loginHandler.go > ERROR > r.ParseForm(): %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	switch r.Method {
@@ -43,6 +44,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		// start a new session
 		session, err := store.New(r, "session")
 		if err != nil {
+			log.Printf("controllers/loginHandler.go > ERROR > store.New(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -55,7 +57,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		authenticatedUser["user2"] = "password"
 		authenticatedUser["user3"] = "password"
 
-		user := models.User{}
+		user := api.User{}
 
 		var found bool
 		for k, v := range authenticatedUser {
@@ -136,6 +138,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 					ID:         primitive.NewObjectID().Hex(),
 					Username:   user.Username,
 					Groups:     user.Groups,
+					RoleID:     user.RoleID,
 					CreatedBy:  "System",
 					CreatedAt:  ptypes.TimestampNow(),
 					ModifiedBy: "System",
@@ -145,10 +148,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				defer cancel()
 				_, err := userSvc.Create(ctx, req)
 				if err != nil {
+					log.Printf("controllers/loginHandler.go > ERROR > userSvc.Create(): %s\n", err.Error())
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
 			} else {
+				log.Printf("controllers/loginHandler.go > ERROR > userSvc.ByUsername(): %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -164,6 +169,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			defer cancel()
 			_, err := userSvc.Update(ctx, req)
 			if err != nil {
+				log.Printf("controllers/loginHandler.go > ERROR > userSvc.Update(): %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -172,7 +178,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		// save the session
 		err = session.Save(r, w)
 		if err != nil {
-			log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %v\n", err.Error())
+			log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save(): %s\n", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		http.Redirect(w, r, "/home", http.StatusFound)

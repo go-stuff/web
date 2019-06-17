@@ -8,6 +8,7 @@ import (
 
 func routesHandler(w http.ResponseWriter, r *http.Request) {
 
+	routes = nil
 	router.Walk(gorillaWalkFunc)
 
 	render(w, r, "routes.html",

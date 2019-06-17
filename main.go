@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/securecookie"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/go-stuff/mongostore"
 	"github.com/go-stuff/web/controllers"
@@ -101,7 +102,8 @@ func main() {
 
 	// apply middleware
 	router.Use(middlewareCSRF)
-	router.Use(middleware.Auth)
+	router.Use(middleware.Auth) // Auth should be before Permissions
+	router.Use(middleware.Permissions)
 
 	// init server
 	server := &http.Server{
@@ -113,7 +115,7 @@ func main() {
 	}
 
 	// start server
-	log.Println("main.go > INFO > Listening and Serving @", server.Addr)
+	log.Println("main.go > INFO > main(): Listening and Serving @", server.Addr)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
@@ -123,9 +125,9 @@ func main() {
 func initEnvironment() error {
 	_, err := os.Stat(".env")
 	if os.IsNotExist(err) {
-		log.Println("main.go > INFO > .env does not exist")
+		log.Println("main.go > INFO > initEnvironment(): .env does not exist")
 	} else {
-		log.Println("main.go > INFO > .env loaded")
+		log.Println("main.go > INFO > initEnvironment(): .env loaded")
 		// open .env
 		file, err := os.Open(".env")
 		if err != nil {
@@ -187,7 +189,7 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 		return nil, nil, err
 	}
 
-	log.Println("main.go > INFO > Connected to MongoDB @", os.Getenv("MONGOURL"))
+	log.Println("main.go > INFO > initMongoClient(): Connected to MongoDB @", os.Getenv("MONGOURL"))
 	return client, ctx, nil
 }
 
@@ -223,7 +225,14 @@ func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, err
 }
 
 func initAPI() (*grpc.ClientConn, error) {
-	conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithInsecure())
+	creds, err := credentials.NewClientTLSFromFile("./certs/cert.pem", "")
+	if err != nil {
+		return nil, err
+	}
+	// with cert
+	conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithTransportCredentials(creds))
+	// without cert
+	// conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

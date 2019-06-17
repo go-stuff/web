@@ -5,7 +5,7 @@
     {{ .CSRF }}
     <div class="field">
         <label class="label" for="name">Name</label>
-        <input class="input" type="text" name="name" id="username" value="{{ .Role.Name }}" required pattern="[0-9A-Za-z/\s-]*">
+        <input class="input" type="text" name="name" id="name" value="{{ .Role.Name }}" required pattern="[0-9A-Za-z/\s-]*">
     </div>
     <div class="field">
         <label class="label" for="description">Description</label>
@@ -16,7 +16,7 @@
 </form>
 {{ if .Role.CreatedBy }}
 <hr>
-<p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ .Role.CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</p>
-<p><strong>Modified by:</strong> {{ .Role.ModifiedBy }} @ {{ .Role.ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</p>
+<p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ timestamp .Role.CreatedAt }}</p>
+<p><strong>Modified by:</strong> {{ .Role.ModifiedBy }} @ {{ timestamp .Role.ModifiedAt }}</p>
 {{ end }}
 {{ end }}

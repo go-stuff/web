@@ -14,14 +14,14 @@
             </tr>
         </thead>
         <tbody>
-            {{ range $index, $results := . }}
+            {{ range $index, $results := .Sessions }}
             <tr>
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
                 <td>{{ .Username }}</td>
                 <td>{{ .RemoteAddr }}</td>
                 <td class="is-hidden-mobile">{{ .Host }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 AM MST" }}</td>
-                <td>{{ .ExpiresAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
+                <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
+                <td>{{ timestamp .ExpiresAt }}</td>
             </tr>
             {{ end }}
         </tbody>

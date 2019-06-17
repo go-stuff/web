@@ -73,11 +73,11 @@ func Auth(next http.Handler) http.Handler {
 
 		session, err := store.Get(r, "session")
 		if err != nil {
-			log.Printf("middleware/auth.go > ERROR > Auth() > store.Get > %s\n", err.Error())
+			log.Printf("middleware/auth.go > ERROR > Auth() > store.Get(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("middleware/auth.go > INFO > Auth() > store.Get > %v %v\n", session.ID, session.Values["username"])
+		log.Printf("middleware/auth.go > INFO > Auth() > store.Get(): %v %v\n", session.ID, session.Values["username"])
 
 		// If this is a new session redirect to the login screen.
 		if session.IsNew && r.RequestURI != "/login" {
@@ -96,7 +96,9 @@ func Auth(next http.Handler) http.Handler {
 			// Save the session.
 			err = store.Save(r, w, session)
 			if err != nil {
-				log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save > %s\n", err.Error())
+				log.Printf("middleware/auth.go > ERROR > Auth() > sessions.Save(): %s\n", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 
 			http.Redirect(w, r, "/login", http.StatusSeeOther)

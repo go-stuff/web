@@ -18,10 +18,6 @@
                 <th scope="col" class="is-hidden-mobile">#</th>
                 <th scope="col">Name</th>
                 <th scope="col">Description</th>
-                <th scope="col" class="is-hidden-mobile">Created By</th>
-                <th scope="col" class="is-hidden-mobile">Created At</th>
-                <th scope="col" class="is-hidden-mobile">Modified By</th>
-                <th scope="col" class="is-hidden-mobile">Modified At</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
@@ -31,11 +27,8 @@
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
                 <td>{{ .Name }}</td>
                 <td>{{ .Description }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .ModifiedAt }}</td>
                 <td>
+                    <a class="button is-dark is-small" href="/permissions/{{ .ID }}" aria-label="Permissions {{ .Name }}">Permissions</a>
                     <a class="button is-link is-small" href="/roles/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
                     <a class="button is-info is-small" href="/roles/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
                     <a class="button is-danger is-small" href="/roles/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>

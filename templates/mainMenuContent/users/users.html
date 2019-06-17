@@ -12,21 +12,36 @@
             <tr>
                 <th scope="col" class="is-hidden-mobile">#</th>
                 <th scope="col">Username</th>
+                <th scope="col">Role</th>
                 <th scope="col" class="is-hidden-mobile">Created By</th>
                 <th scope="col" class="is-hidden-mobile">Created At</th>
                 <th scope="col" class="is-hidden-mobile">Modified By</th>
                 <th scope="col" class="is-hidden-mobile">Modified At</th>
+                <th scope="col">Actions</th>
             </tr>
         </thead>
         <tbody>
-            {{ range $index, $results := .Users }}
+            {{ range $index, $user := .Users }}
             <tr>
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
                 <td>{{ .Username }}</td>
+                <td>
+                    {{ range $role := $.Roles }}
+                        {{ if eq $role.ID $user.RoleID }}
+                            {{ $role.Name }}
+                        {{ end }}
+                    {{ end }}
+                    </div>
+                </td>
                 <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
                 <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
                 <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
                 <td class="is-hidden-mobile">{{ timestamp .ModifiedAt }}</td>
+                <td>
+                    <a class="button is-link is-small" href="/users/read/{{ .ID }}" aria-label="Read {{ .Username }}">Read</a>
+                    <a class="button is-info is-small" href="/users/update/{{ .ID }}" aria-label="Update {{ .Username }}">Update</a>
+                    <a class="button is-danger is-small" href="/users/delete/{{ .ID }}" aria-label="Delete {{ .Username }}">Delete</a>
+                </td>
             </tr>
             {{ end }}
         </tbody>

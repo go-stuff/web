@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 
@@ -26,13 +27,14 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		// call api to get a slice of users
+		// call api to get a slice of roles
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		svc := api.NewRoleServiceClient(apiClient)
 		req := new(api.RoleSliceReq)
 		slice, err := svc.Slice(ctx, req)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > svc.Slice(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -187,6 +189,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
+		log.Printf("controllers/rolesHandler.go > ERROR > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -206,6 +209,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		req.ID = vars["id"]
 		res, err := svc.Read(ctx, req)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -213,6 +217,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -244,6 +249,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		_, err := svc.Update(ctx, req)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > svc.Update(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -254,6 +260,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -267,6 +274,7 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
+		log.Printf("controllers/rolesHandler.go > ERROR > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -286,6 +294,7 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		readReq.ID = vars["id"]
 		readRes, err := svc.Read(ctx, readReq)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -304,6 +313,7 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
+			log.Printf("controllers/rolesHandler.go > ERROR > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
