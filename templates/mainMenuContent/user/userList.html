@@ -7,7 +7,7 @@
 <h1 class="title is-3">Users</h1>
 <hr>
 <div id="hide" style="display: none;">
-    <table id="datatable" class="datatable table table-sm table-hover">
+    <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
         <thead>
             <tr>
                 <th scope="col" class="is-hidden-mobile">#</th>
@@ -45,11 +45,40 @@
             </tr>
             {{ end }}
         </tbody>
+        <tfoot>
+            <tr>
+                <th scope="col" class="is-hidden-mobile">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">Role</th>
+                <th scope="col" class="is-hidden-mobile">Created By</th>
+                <th scope="col" class="is-hidden-mobile">Created At</th>
+                <th scope="col" class="is-hidden-mobile">Modified By</th>
+                <th scope="col" class="is-hidden-mobile">Modified At</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </tfoot>
     </table>
 </div>
 <script>
     $(document).ready(function() {
-        $('#datatable').DataTable({
+        // Setup - add a text input to each footer cell
+        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
+        $('#datatable thead tr:eq(1) th').each( function (i) {
+            var title = $(this).text();
+            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
+    
+            $( 'input', this ).on( 'keyup change', function () {
+                if ( table.column(i).search() !== this.value ) {
+                    table
+                        .column(i)
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } );
+        var table = $('#datatable').DataTable({
+            orderCellsTop: true,
+            fixedHeader: true,
             "order": [[ 1, "asc" ]],
             "initComplete": function(){
                 $('#hide').show();

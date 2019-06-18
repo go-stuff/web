@@ -166,14 +166,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			userReq.User.ID = foundRes.User.ID
 			userReq.User.Username = user.Username
 			userReq.User.Groups = user.Groups
+			userReq.User.RoleID = foundRes.User.RoleID
 			userReq.User.ModifiedBy = "System"
-			
+
 			_, err := userSvc.Update(ctx, userReq)
 			if err != nil {
 				log.Printf("controllers/loginHandler.go > ERROR > userSvc.Update(): %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
+			session.Values["roleid"] = foundRes.User.RoleID
 		}
 
 		// save the session

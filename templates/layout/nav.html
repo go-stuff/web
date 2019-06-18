@@ -3,17 +3,27 @@
 <ul class="menu-list is-sr-only">
     <li class="is-sr-only"><a href="#main">Skip to main content</a></li>
 </ul>
+{{ if or (P "/role/list") (P "/route/list") (P "/session/list") (P "/user/list") }}
 <p class="menu-label has-text-black"><strong>Admin</strong></p>
 <ul class="menu-list">
+    {{ if P "/role/list" }}
     <li><a href="/role/list">Roles</a></li>
+    {{ end }}
+    {{ if P "/route/list" }}
     <li><a href="/route/list">Routes</a></li>
-    <li><a href="/server/list">Servers</a></li>
+    {{ end }}
+    {{ if P "/session/list" }}
     <li><a href="/session/list">Sessions</a></li>
+    {{ end }}
+    {{ if P "/user/list" }}
     <li><a href="/user/list">Users</a></li>
+    {{ end }}
 </ul>
+{{ end }}
 <p class="menu-label has-text-black"><strong>General</strong></p>
 <ul class="menu-list">
     <li><a href="/home">Home</a></li>
+    <li><a href="/server/list">Servers</a></li>
     <li class="is-hidden-desktop"><a href="/logout">Logout</a></li>
 </ul>
 {{end}}

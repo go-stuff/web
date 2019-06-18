@@ -69,7 +69,7 @@ func main() {
 	router := controllers.Init(client, store, apiClient)
 
 	// init middlware
-	middleware.Init(store)
+	middleware.Init(store, apiClient)
 
 	// generate an csrf key to use if the GORILLA_CSRF_KEY environment
 	// variable is not set
@@ -116,7 +116,7 @@ func main() {
 
 	// start server
 	log.Println("INFO > main.go > main(): Listening and Serving @", server.Addr)
-	err = server.ListenAndServe()
+	err = server.ListenAndServeTLS("./cert.pem", "./key.pem")
 	if err != nil {
 		log.Fatal(err)
 	}

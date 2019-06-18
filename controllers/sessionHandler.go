@@ -20,7 +20,7 @@ func sessionListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// display session
-	log.Printf("INFO > controllers/sessionsHandler.go > sessionListHandler() > session: %s %s\n", session.Values["_id"].(string), session.Values["username"].(string))
+	log.Printf("INFO > controllers/sessionsHandler.go > sessionListHandler() > session: %v %v\n", session.Values["_id"], session.Values["username"])
 
 	// call api to get a slice of sessions
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

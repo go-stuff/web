@@ -1,10 +1,14 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/go-stuff/grpc/api"
 	"github.com/gorilla/mux"
 )
 
@@ -29,23 +33,6 @@ func Permissions(next http.Handler) http.Handler {
 
 		log.Printf("INFO > middleware/permission.go > Permissions() > pathTemplate: %s\n", pathTemplate)
 
-		// Get the regex version of the RequestURI.
-		// route := controllers.RouteToRegex(r.RequestURI)
-
-		// //log.WithFields(log.Fields{"func": "ServeHTTP", "file": "middleware/permission.go"}).Debugf("User: %v, Role: %v, Route: %v", s.Values["UserID"], s.Values["RoleTypeID"], route)
-		// if route != "/noauth" &&
-		// 	route != "/login" &&
-		// 	route != "/login/noauth" &&
-		// 	route != "/logout" &&
-		// 	route != "/en" &&
-		// 	route != "/fr" {
-
-		// 	session := getSession(r)
-		// 	roleid, err := stringToUint(fmt.Sprintf("%v", session.Values["RoleID"]))
-		// 	if err != nil {
-		// 		//panic(err)
-		// 		log.Fatalf("middleware/permission.go > WARN > Permissions() > %v\n", err.Error())
-		// 	}
 		// get session
 		session, err := store.Get(r, "session")
 		if err != nil {
@@ -54,11 +41,55 @@ func Permissions(next http.Handler) http.Handler {
 			return
 		}
 
-		// 	if controllers.PermissionsMap()[roleid][route] == false {
-		// 		log.Printf("middleware/permission.go > WARN > Permissions() > The role: %v has no permissions to route: %v\n", roleid, route)
-		// 		http.Redirect(w, r, "/noauth", http.StatusTemporaryRedirect)
-		// 	}
-		// }
+		if pathTemplate != "/" &&
+			pathTemplate != "/noauth" &&
+			pathTemplate != "/login" &&
+			pathTemplate != "/login/noauth" &&
+			pathTemplate != "/logout" {
+
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			routeSvc := api.NewRouteServiceClient(apiClient)
+
+			// use the api to find a role
+			routeReq := new(api.RouteReadByRoleIDAndPathReq)
+
+			if session.Values["roleid"] == nil || session.Values["roleid"] == "" {
+				log.Println("ERROR > middleware/Permissions.go > no role")
+				http.Error(w, "account has no role", http.StatusInternalServerError)
+				return
+			}
+
+			roleid := fmt.Sprintf("%v", session.Values["roleid"])
+
+			routeReq.Route = new(api.Route)
+			routeReq.Route.RoleID = roleid
+			routeReq.Route.Path = pathTemplate
+			routeRes, err := routeSvc.ReadByRoleIDAndPath(ctx, routeReq)
+			if err != nil {
+				log.Printf("ERROR > controllers/permissions.go > permissionFM() > routeSvc.RouteReadByRoleIDAndPath(): %s\n", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			log.Printf("INFO > controllers/controllers.go > permissionFM() > pathTemplate = permission: %s = %v\n", pathTemplate, routeRes.Route.Permission)
+
+			if routeRes.Route.Permission == false {
+				log.Printf("WARN > middleware/permission.go > Permissions() > The role: %v has no permissions to route: %v\n", roleid, pathTemplate)
+
+				session.Values["pathtemplate"] = pathTemplate
+				// save session
+				err = session.Save(r, w)
+				if err != nil {
+					log.Printf("ERROR > middleware/Permissions.go > session.Save(): %s\n", err.Error())
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				http.Redirect(w, r, "/noauth", http.StatusTemporaryRedirect)
+			}
+		}
 
 		// save session
 		err = session.Save(r, w)

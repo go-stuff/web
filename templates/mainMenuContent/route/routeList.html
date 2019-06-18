@@ -6,48 +6,81 @@
 {{ end }}
 <h1 class="title is-3">Routes</h1>
 <hr>
-<div id="hide" style="display: none;">
-    <table id="datatable" class="datatable table table-sm table-hover">
-        <thead>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">RoleID</th>
-                <th scope="col">Role</th>
-                <th scope="col">Route</th>
-                <th scope="col">Permission</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{ range $index, $route := .Routes }}
-            <tr>
-                <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                <td>{{ .RoleID }}</td>
-                <td>
-                    {{ range $role := $.Roles }}
-                        {{ if eq $role.ID $route.RoleID }}
-                            {{ $role.Name }}
+<form method="post">
+    {{ .CSRF }}
+    <div id="hide" style="display: none;">
+        <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
+            <thead>
+                <tr>
+                    <th scope="col" class="is-hidden-mobile">#</th>
+                    <th scope="col">RoleID</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Route</th>
+                    <th scope="col">Permission</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range $index, $route := .Routes }}
+                <tr>
+                    <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
+                    <td>{{ .RoleID }}</td>
+                    <td>
+                        {{ range $role := $.Roles }}
+                            {{ if eq $role.ID $route.RoleID }}
+                                {{ $role.Name }}
+                            {{ end }}
                         {{ end }}
-                    {{ end }}
-                </td>
-                <td>{{ .Path }}</td>
-                <td>
-                    <label class="checkbox">
-                    <input type="checkbox" name="{{ .ID }}" {{ if .Permission }}checked{{ end }}>
-                        Select
-                    </label>
-                </td>
-            </tr>
-            {{ end }}
-        </tbody>
-    </table>
-    <hr>
-    <a class="button is-primary" href="/route/update">Update</a>
-</div>
+                    </td>
+                    <td>{{ .Path }}</td>
+                    <td>
+                        <label class="checkbox">
+                        <input type="checkbox" name="{{ .ID }}" id="{{ .ID }}" onchange="toggleCheckbox(this)" {{ if .Permission }}checked{{ end }}>
+                            Select
+                        </label>
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th scope="col" class="is-hidden-mobile">#</th>
+                    <th scope="col">RoleID</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Route</th>
+                    <th scope="col">Permission</th>
+                </tr>
+            </tfoot>
+        </table>
+        <hr>
+        <input class="button is-primary" type="submit" name="update" value="Update">
+        <a class="button is-secondary" href="/route/list">Cancel</a>
+        {{range $index, $element := .Routes}} 
+        <input type="hidden" id="hidden{{ $element.ID }}" name="hidden{{ $element.ID }}" value="{{ if $element.Permission }}checked{{ end }}">
+        {{end}}    
+    </div>
+</form>
 <script>
     $(document).ready(function() {
-        $('#datatable').DataTable({
+        // Setup - add a text input to each footer cell
+        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
+        $('#datatable thead tr:eq(1) th').each( function (i) {
+            var title = $(this).text();
+            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
+    
+            $( 'input', this ).on( 'keyup change', function () {
+                if ( table.column(i).search() !== this.value ) {
+                    table
+                        .column(i)
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } );
+        var table = $('#datatable').DataTable({
+            orderCellsTop: true,
+            fixedHeader: true,
             "order": [[ 1, "asc" ]],
-            "initComplete": function() {
+            "initComplete": function(){
                 $('#hide').show();
             }
         });
@@ -58,11 +91,13 @@
     function toggleCheckbox(element)
     {
         var name = $(element).attr("name");
-        var hiddenName = "#hidden" + name;
+        var hiddenElement = "#hidden" + name;
         if ($(element).is(":checked")) { 
-            $(hiddenName).val("checked");
+            $(element).val("checked");
+            $(hiddenElement).val("checked");
         } else {
-            $(hiddenName).val("");
+            $(element).val("");
+            $(hiddenElement).val("");
         }
     }
 </script>

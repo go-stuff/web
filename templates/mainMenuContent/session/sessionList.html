@@ -2,7 +2,7 @@
 <h1 class="title is-3">Sessions</h1>
 <hr>
 <div id="hide" style="display: none;">
-    <table id="datatable" class="datatable table table-sm table-hover">
+    <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
         <thead>
             <tr>
                 <th scope="col" class="is-hidden-mobile">#</th>
@@ -29,9 +29,26 @@
 </div>
 <script>
     $(document).ready(function() {
-        $('#datatable').DataTable({
+        // Setup - add a text input to each footer cell
+        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
+        $('#datatable thead tr:eq(1) th').each( function (i) {
+            var title = $(this).text();
+            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
+    
+            $( 'input', this ).on( 'keyup change', function () {
+                if ( table.column(i).search() !== this.value ) {
+                    table
+                        .column(i)
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } );
+        var table = $('#datatable').DataTable({
+            orderCellsTop: true,
+            fixedHeader: true,
             "order": [[ 1, "asc" ]],
-            "initComplete": function() {
+            "initComplete": function(){
                 $('#hide').show();
             }
         });
