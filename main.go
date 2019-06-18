@@ -115,7 +115,7 @@ func main() {
 	}
 
 	// start server
-	log.Println("main.go > INFO > main(): Listening and Serving @", server.Addr)
+	log.Println("INFO > main.go > main(): Listening and Serving @", server.Addr)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
@@ -125,9 +125,9 @@ func main() {
 func initEnvironment() error {
 	_, err := os.Stat(".env")
 	if os.IsNotExist(err) {
-		log.Println("main.go > INFO > initEnvironment(): .env does not exist")
+		log.Println("INFO > main.go > initEnvironment(): .env does not exist")
 	} else {
-		log.Println("main.go > INFO > initEnvironment(): .env loaded")
+		log.Println("INFO > main.go > initEnvironment(): .env loaded")
 		// open .env
 		file, err := os.Open(".env")
 		if err != nil {
@@ -189,7 +189,7 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 		return nil, nil, err
 	}
 
-	log.Println("main.go > INFO > initMongoClient(): Connected to MongoDB @", os.Getenv("MONGOURL"))
+	log.Println("INFO > main.go > initMongoClient(): Connected to MongoDB @", os.Getenv("MONGOURL"))
 	return client, ctx, nil
 }
 

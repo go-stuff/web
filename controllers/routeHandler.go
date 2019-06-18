@@ -27,7 +27,7 @@ func CompileRoutes() error {
 	roleReq := new(api.RoleListReq)
 	roleRes, err := roleSvc.List(ctx, roleReq)
 	if err != nil {
-		log.Printf("controllers/rolesHandler.go > ERROR > roleSvc.List(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/roleHandler.go > CompileRoutes() > roleSvc.List(): %s\n", err.Error())
 		return err
 	}
 
@@ -35,13 +35,13 @@ func CompileRoutes() error {
 	routeReq := new(api.RouteListReq)
 	routeRes, err := routeSvc.List(ctx, routeReq)
 	if err != nil {
-		log.Printf("controllers/routesHandler.go > ERROR > routeSvc.List(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/routeHandler.go > CompileRoutes() > routeSvc.List(): %s\n", err.Error())
 		return err
 	}
 
 	// iterate over roles and routes
 	for _, s := range routes {
-		log.Printf("route: %v\n", s)
+		log.Printf("INFO > controllers/routeHandler.go > CompileRoutes(): - %v\n", s)
 
 		for _, role := range roleRes.Roles {
 
@@ -52,9 +52,9 @@ func CompileRoutes() error {
 				}
 			}
 			if found {
-				log.Println("found")
+				// log.Println("found")
 			} else {
-				log.Println("not found")
+				// log.Println("not found")
 
 				uReq := new(api.RouteUpdateByRoleIDAndPathReq)
 				uReq.Route = &api.Route{
@@ -132,4 +132,7 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
 
 func routeUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
+
+
+	http.Redirect(w, r, "/route/list", http.StatusSeeOther)
 }

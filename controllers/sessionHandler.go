@@ -14,13 +14,13 @@ func sessionListHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
-		log.Printf("controllers/sessionsHandler.go > ERROR > sessionListHandler() > store.Get(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/sessionsHandler.go > sessionListHandler() > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// display session
-	log.Printf("controllers/sessionsHandler.go > INFO > sessionListHandler() > session: %s %s\n", session.Values["_id"].(string), session.Values["username"].(string))
+	log.Printf("INFO > controllers/sessionsHandler.go > sessionListHandler() > session: %s %s\n", session.Values["_id"].(string), session.Values["username"].(string))
 
 	// call api to get a slice of sessions
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -31,7 +31,7 @@ func sessionListHandler(w http.ResponseWriter, r *http.Request) {
 	sessionReq := new(api.SessionListReq)
 	sessionRes, err := sessionSvc.List(ctx, sessionReq)
 	if err != nil {
-		log.Printf("controllers/sessionsHandler.go > ERROR > sessionListHandler() > sessionSvc.List(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/sessionsHandler.go > sessionListHandler() > sessionSvc.List(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +78,7 @@ func sessionListHandler(w http.ResponseWriter, r *http.Request) {
 	// save session
 	err = session.Save(r, w)
 	if err != nil {
-		log.Printf("controllers/sessionsHandler.go > ERROR > sessionListHandler() > session.Save(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/sessionsHandler.go > sessionListHandler() > session.Save(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

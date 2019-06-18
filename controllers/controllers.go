@@ -48,7 +48,7 @@ func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore, apiclien
 }
 
 func initTemplates() error {
-	log.Println("controllers/controllers.go > INFO > initTemplates()")
+	log.Println("INFO > controllers/controllers.go > initTemplates()")
 
 	// initialize the content files templates map
 	templates = make(map[string]*template.Template)
@@ -70,7 +70,7 @@ func initTemplates() error {
 
 // <html> head, header, content, footer </html
 func initTemplatesWithContent() error {
-	log.Println("controllers/controllers.go > INFO > initTemplatesWithContent()")
+	log.Println("INFO > controllers/controllers.go > initTemplatesWithContent()")
 	var err error
 
 	// check the validity of login.html by parsing
@@ -95,7 +95,7 @@ func initTemplatesWithContent() error {
 
 // <html> head, header, menu, content, footer </html
 func initTemplatesWithNavAndContent() error {
-	log.Println("controllers/controllers.go > INFO > initTemplatesWithNavAndContent()")
+	log.Println("INFO > controllers/controllers.go > initTemplatesWithNavAndContent()")
 	var err error
 
 	// check the validity of the files that make up layout.html by parsing
@@ -152,7 +152,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 		// add the merged content to the templates map
 		templates[fileInfo.Name()] = content
 
-		log.Printf("controllers/controllers.go > INFO > walkTemplatesPath(): - %s", fileInfo.Name())
+		log.Printf("INFO > controllers/controllers.go > walkTemplatesPath(): - %s", fileInfo.Name())
 	}
 
 	return nil
@@ -160,7 +160,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 
 // render templates with data
 func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{}) {
-	log.Printf("controllers/controllers.go > INFO > render(): %s", tmpl)
+	log.Printf("INFO > controllers/controllers.go > render(): %s", tmpl)
 
 	// var tpl bytes.Buffer
 	// e := templates[tmpl].Execute(&tpl, data)
@@ -180,13 +180,13 @@ func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{
 	// Execute the template.
 	err := templates[tmpl].Execute(w, data)
 	if err != nil {
-		log.Printf("controllers.go > ERROR > render(): %v", err)
+		log.Printf("ERROR > controllers.go > render(): %v", err)
 		//fmt.Println(err)
 	}
 }
 
 func initRouter() *mux.Router {
-	log.Println("controllers/controllers.go > INFO > initRouter()")
+	log.Println("INFO > controllers/controllers.go > initRouter()")
 
 	router := mux.NewRouter()
 

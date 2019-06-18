@@ -17,7 +17,7 @@ func userListHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > store.Get(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -32,7 +32,7 @@ func userListHandler(w http.ResponseWriter, r *http.Request) {
 	roleReq := new(api.RoleListReq)
 	roleRes, err := roleSvc.List(ctx, roleReq)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > rolesSvc.Slice(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > rolesSvc.Slice(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -40,7 +40,7 @@ func userListHandler(w http.ResponseWriter, r *http.Request) {
 	userReq := new(api.UserListReq)
 	userRes, err := userSvc.List(ctx, userReq)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > userSvc.Slice(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > userSvc.Slice(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -48,7 +48,7 @@ func userListHandler(w http.ResponseWriter, r *http.Request) {
 	// save session
 	err = session.Save(r, w)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > session.Save(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > session.Save(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -56,7 +56,7 @@ func userListHandler(w http.ResponseWriter, r *http.Request) {
 	// get notifications if there are any
 	notification, err := getNotification(w, r)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > getNotification(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > getNotification(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +78,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > store.Get(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -98,7 +98,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		roleReq := new(api.RoleListReq)
 		roleRes, err := roleSvc.List(ctx, roleReq)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > svc.Read(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -108,7 +108,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		userReq.ID = vars["id"]
 		userRes, err := userSvc.Read(ctx, userReq)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > svc.Read(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -116,7 +116,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
-			log.Printf("controllers/rolesHandler.go > ERROR > session.Save(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/rolesHandler.go > userUpdateHandler() > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -150,7 +150,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		_, err := userSvc.Update(ctx, userReq)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > svc.Update(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > svc.Update(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -161,7 +161,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > session.Save(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

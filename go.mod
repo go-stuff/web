@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.40.0 // indirect
 	github.com/go-stuff/grpc v0.0.0-20190617230232-22ba7de65fc8
 	github.com/go-stuff/ldap v0.0.2
-	github.com/go-stuff/mongostore v0.1.11
+	github.com/go-stuff/mongostore v0.1.16
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.3.1 // indirect
 	github.com/golang/protobuf v1.3.1
