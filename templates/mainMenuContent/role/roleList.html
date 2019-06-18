@@ -5,7 +5,7 @@
     {{ .Notification }}
 </div>
 {{ end }}
-<h1 class="title is-3">Servers</h1>
+<h1 class="title is-3">Roles</h1>
 <hr>
 <div id="hide" >
     <script>
@@ -18,34 +18,26 @@
                 <th scope="col" class="is-hidden-mobile">#</th>
                 <th scope="col">Name</th>
                 <th scope="col">Description</th>
-                <th scope="col" class="is-hidden-mobile">Created By</th>
-                <th scope="col" class="is-hidden-mobile">Created At</th>
-                <th scope="col" class="is-hidden-mobile">Modified By</th>
-                <th scope="col" class="is-hidden-mobile">Modified At</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
         <tbody>
-            {{ range $index, $results := .Servers }}
+            {{ range $index, $results := .Roles }}
             <tr>
                 <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
                 <td>{{ .Name }}</td>
                 <td>{{ .Description }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
                 <td>
-                    <a class="button is-link is-small" href="/servers/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
-                    <a class="button is-info is-small" href="/servers/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
-                    <a class="button is-danger is-small" href="/servers/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>
+                    <a class="button is-link is-small" href="/role/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
+                    <a class="button is-info is-small" href="/role/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
+                    <a class="button is-danger is-small" href="/role/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>
                 </td>
             </tr>
             {{ end }}
         </tbody>
     </table>
     <hr>
-    <a class="button is-primary" href="/servers/create">Create</a>
+    <a class="button is-primary" href="/role/create">Create</a>
 </div>
 <script>
     $(document).ready(function() {

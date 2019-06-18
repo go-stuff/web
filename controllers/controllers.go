@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -10,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/go-stuff/grpc/api"
 	"github.com/go-stuff/mongostore"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/mux"
@@ -44,13 +42,13 @@ func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore, apiclien
 
 	router = initRouter()
 
-	initPermissions()
+	CompileRoutes()
 
 	return router
 }
 
 func initTemplates() error {
-	log.Println("controllers/controllers.go > INFO > initTemplates()")
+	log.Println("INFO > controllers/controllers.go > initTemplates()")
 
 	// initialize the content files templates map
 	templates = make(map[string]*template.Template)
@@ -72,7 +70,7 @@ func initTemplates() error {
 
 // <html> head, header, content, footer </html
 func initTemplatesWithContent() error {
-	log.Println("controllers/controllers.go > INFO > initTemplatesWithContent()")
+	log.Println("INFO > controllers/controllers.go > initTemplatesWithContent()")
 	var err error
 
 	// check the validity of login.html by parsing
@@ -97,7 +95,7 @@ func initTemplatesWithContent() error {
 
 // <html> head, header, menu, content, footer </html
 func initTemplatesWithNavAndContent() error {
-	log.Println("controllers/controllers.go > INFO > initTemplatesWithNavAndContent()")
+	log.Println("INFO > controllers/controllers.go > initTemplatesWithNavAndContent()")
 	var err error
 
 	// check the validity of the files that make up layout.html by parsing
@@ -154,7 +152,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 		// add the merged content to the templates map
 		templates[fileInfo.Name()] = content
 
-		log.Printf("controllers/controllers.go > INFO > walkTemplatesPath(): - %s", fileInfo.Name())
+		log.Printf("INFO > controllers/controllers.go > walkTemplatesPath(): - %s", fileInfo.Name())
 	}
 
 	return nil
@@ -162,7 +160,7 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 
 // render templates with data
 func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{}) {
-	log.Printf("controllers/controllers.go > INFO > render(): %s", tmpl)
+	log.Printf("INFO > controllers/controllers.go > render(): %s", tmpl)
 
 	// var tpl bytes.Buffer
 	// e := templates[tmpl].Execute(&tpl, data)
@@ -182,39 +180,42 @@ func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{
 	// Execute the template.
 	err := templates[tmpl].Execute(w, data)
 	if err != nil {
-		log.Printf("controllers.go > ERROR > render(): %v", err)
+		log.Printf("ERROR > controllers.go > render(): %v", err)
 		//fmt.Println(err)
 	}
 }
 
 func initRouter() *mux.Router {
-	log.Println("controllers/controllers.go > INFO > initRouter()")
+	log.Println("INFO > controllers/controllers.go > initRouter()")
 
 	router := mux.NewRouter()
 
-	// Handle URLs
-	router.HandleFunc("/", rootHandler).Methods("GET", "POST")
-	router.HandleFunc("/home", homeHandler).Methods("GET")
+	// System Routes
+	router.HandleFunc("/session/list", sessionListHandler).Methods("GET")
 
-	router.HandleFunc("/servers", serversHandler).Methods("GET")
-	router.HandleFunc("/servers/create", serverCreateHandler).Methods("GET", "POST")
+	router.HandleFunc("/role/list", roleListHandler).Methods("GET")
+	router.HandleFunc("/role/create", roleCreateHandler).Methods("GET", "POST")
+	router.HandleFunc("/role/read/{id}", roleReadHandler).Methods("GET")
+	router.HandleFunc("/role/update/{id}", roleUpdateHandler).Methods("GET", "POST")
+	router.HandleFunc("/role/delete/{id}", roleDeleteHandler).Methods("GET")
 
-	router.HandleFunc("/sessions", sessionsHandler).Methods("GET")
+	router.HandleFunc("/route/list", routeListHandler).Methods("GET")
+	router.HandleFunc("/route/update", routeUpdateHandler).Methods("GET")
 
-	router.HandleFunc("/roles", rolesHandler).Methods("GET")
-	router.HandleFunc("/roles/create", roleCreateHandler).Methods("GET", "POST")
-	router.HandleFunc("/roles/read/{id}", roleReadHandler).Methods("GET")
-	router.HandleFunc("/roles/update/{id}", roleUpdateHandler).Methods("GET", "POST")
-	router.HandleFunc("/roles/delete/{id}", roleDeleteHandler).Methods("GET")
-
-	router.HandleFunc("/routes", routesHandler).Methods("GET")
-
-	router.HandleFunc("/users", usersHandler).Methods("GET")
-	router.HandleFunc("/users/update/{id}", userUpdateHandler).Methods("GET", "POST")
-	router.HandleFunc("/users/delete/{id}", userDeleteHandler).Methods("GET")
+	router.HandleFunc("/user/list", userListHandler).Methods("GET")
+	router.HandleFunc("/user/update/{id}", userUpdateHandler).Methods("GET", "POST")
+	router.HandleFunc("/user/delete/{id}", userDeleteHandler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("GET", "POST")
 	router.HandleFunc("/logout", loginHandler).Methods("GET")
+
+	// App Routes
+	router.HandleFunc("/", rootHandler).Methods("GET", "POST")
+	router.HandleFunc("/home", homeHandler).Methods("GET")
+
+	router.HandleFunc("/server/list", serverListHandler).Methods("GET")
+	router.HandleFunc("/server/create", serverCreateHandler).Methods("GET", "POST")
+
 
 	// Setup or static files.
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -222,26 +223,26 @@ func initRouter() *mux.Router {
 	return router
 }
 
-func initPermissions() error {
-	// call api to get a slice of permissions
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	svc :=  api.NewPermissionServiceClient(apiClient)
-	req := new(api.PermissionSliceReq)
-	slice, err := svc.Slice(ctx, req)
-	if err != nil {
-		log.Printf("controllers/controllers.go > ERROR > svc.Slice(): %s\n", err.Error())
-		return err
-	}
+// func initPermissions() error {
+// 	// call api to get a slice of permissions
+// 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+// 	defer cancel()
+// 	svc :=  api.NewPermissionServiceClient(apiClient)
+// 	req := new(api.PermissionSliceReq)
+// 	slice, err := svc.Slice(ctx, req)
+// 	if err != nil {
+// 		log.Printf("controllers/controllers.go > ERROR > svc.Slice(): %s\n", err.Error())
+// 		return err
+// 	}
 
-	permissions = make(map[string]string)
+// 	permissions = make(map[string]string)
 
-for _, permission := range slice.Permissions {
-	permissions[permission.RoleID] = permission.Route
-}
+// for _, permission := range slice.Permissions {
+// 	permissions[permission.RoleID] = permission.Route
+// }
 
-return nil
-}
+// return nil
+// }
 
 // format timestamps
 func timestampFM() template.FuncMap {

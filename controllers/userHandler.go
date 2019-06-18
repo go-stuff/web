@@ -13,35 +13,34 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func usersHandler(w http.ResponseWriter, r *http.Request) {
+func userListHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > store.Get(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// call api to get a slice of users
-	rolesCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	rolesSvc := api.NewRoleServiceClient(apiClient)
-	rolesReq := new(api.RoleSliceReq)
-	rolesSlice, err := rolesSvc.Slice(rolesCtx, rolesReq)
+
+	roleSvc := api.NewRoleServiceClient(apiClient)
+	userSvc := api.NewUserServiceClient(apiClient)
+
+	roleReq := new(api.RoleListReq)
+	roleRes, err := roleSvc.List(ctx, roleReq)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > rolesSvc.Slice(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > rolesSvc.Slice(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// call api to get a slice of users
-	usersCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	usersSvc := api.NewUserServiceClient(apiClient)
-	usersReq := new(api.UserSliceReq)
-	usersSlice, err := usersSvc.Slice(usersCtx, usersReq)
+	
+	userReq := new(api.UserListReq)
+	userRes, err := userSvc.List(ctx, userReq)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > userSvc.Slice(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > userSvc.Slice(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -49,7 +48,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	// save session
 	err = session.Save(r, w)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > session.Save(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > session.Save(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -57,20 +56,20 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	// get notifications if there are any
 	notification, err := getNotification(w, r)
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > getNotification(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userListHandler() > getNotification(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	render(w, r, "users.html",
+	render(w, r, "userList.html",
 		struct {
 			Notification string
 			Roles        []*api.Role
 			Users        []*api.User
 		}{
 			Notification: notification,
-			Roles:        rolesSlice.Roles,
-			Users:        usersSlice.Users,
+			Roles:        roleRes.Roles,
+			Users:        userRes.Users,
 		},
 	)
 }
@@ -79,7 +78,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
-		log.Printf("controllers/usersHandler.go > ERROR > store.Get(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > store.Get(): %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -96,10 +95,10 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// use the api to find a role
-		roleReq := new(api.RoleSliceReq)
-		roleSlice, err := roleSvc.Slice(ctx, roleReq)
+		roleReq := new(api.RoleListReq)
+		roleRes, err := roleSvc.List(ctx, roleReq)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > svc.Read(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -109,7 +108,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		userReq.ID = vars["id"]
 		userRes, err := userSvc.Read(ctx, userReq)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > svc.Read(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -117,13 +116,13 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
-			log.Printf("controllers/rolesHandler.go > ERROR > session.Save(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/rolesHandler.go > userUpdateHandler() > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// reder to page
-		render(w, r, "usersUpsert.html",
+		render(w, r, "userUpsert.html",
 			struct {
 				CSRF   template.HTML
 				Title  string
@@ -133,7 +132,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			}{
 				CSRF:   csrf.TemplateField(r),
 				Title:  "Update User",
-				Roles:  roleSlice.Roles,
+				Roles:  roleRes.Roles,
 				User:   userRes.User,
 				Action: "Update",
 			},
@@ -151,7 +150,7 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		_, err := userSvc.Update(ctx, userReq)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > svc.Update(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > svc.Update(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -162,13 +161,13 @@ func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
-			log.Printf("controllers/usersHandler.go > ERROR > session.Save(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/usersHandler.go > userUpdateHandler() > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// redirect to user list
-		http.Redirect(w, r, "/users", http.StatusSeeOther)
+		http.Redirect(w, r, "/user/list", http.StatusSeeOther)
 	}
 }
 
@@ -221,6 +220,6 @@ func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// redirect to users list
-		http.Redirect(w, r, "/users", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/user/list", http.StatusTemporaryRedirect)
 	}
 }

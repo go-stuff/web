@@ -17,7 +17,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 )
 
-func rolesHandler(w http.ResponseWriter, r *http.Request) {
+func roleListHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
@@ -25,16 +25,17 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	roleSvc := api.NewRoleServiceClient(apiClient)
+	
 	switch r.Method {
 	case "GET":
-		// call api to get a slice of roles
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		svc := api.NewRoleServiceClient(apiClient)
-		req := new(api.RoleSliceReq)
-		slice, err := svc.Slice(ctx, req)
+		roleReq := new(api.RoleListReq)
+		roleRes, err := roleSvc.List(ctx, roleReq)
 		if err != nil {
-			log.Printf("controllers/rolesHandler.go > ERROR > svc.Slice(): %s\n", err.Error())
+			log.Printf("controllers/rolesHandler.go > ERROR > roleSvc.List(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -54,13 +55,13 @@ func rolesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// render to page
-		render(w, r, "roles.html",
+		render(w, r, "roleList.html",
 			struct {
 				Notification string
 				Roles        []*api.Role
 			}{
 				Notification: notification,
-				Roles:        slice.Roles,
+				Roles:        roleRes.Roles,
 			},
 		)
 	}
@@ -90,7 +91,7 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// render to page
-		render(w, r, "rolesUpsert.html",
+		render(w, r, "roleUpsert.html",
 			struct {
 				CSRF   template.HTML
 				Title  string
@@ -105,10 +106,14 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 	case "POST":
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
 		// use the api to add a role
-		svc := api.NewRoleServiceClient(apiClient)
-		req := new(api.RoleCreateReq)
-		req.Role = &api.Role{
+		roleSvc := api.NewRoleServiceClient(apiClient)
+
+		roleReq := new(api.RoleCreateReq)
+		roleReq.Role = &api.Role{
 			ID:          primitive.NewObjectID().Hex(),
 			Name:        r.FormValue("name"),
 			Description: r.FormValue("description"),
@@ -117,16 +122,15 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 			ModifiedBy:  session.Values["username"].(string),
 			ModifiedAt:  ptypes.TimestampNow(),
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		_, err := svc.Create(ctx, req)
+	
+		_, err := roleSvc.Create(ctx, roleReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// put a notification in the session.Values that a role was added
-		addNotification(session, fmt.Sprintf("Role '%s' has been created!", req.Role.Name))
+		addNotification(session, fmt.Sprintf("Role '%s' has been created!", roleReq.Role.Name))
 
 		// save session
 		err = session.Save(r, w)
@@ -136,7 +140,7 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// redirect to roles list
-		http.Redirect(w, r, "/roles", http.StatusSeeOther)
+		http.Redirect(w, r, "/role/list", http.StatusSeeOther)
 	}
 }
 
@@ -154,14 +158,15 @@ func roleReadHandler(w http.ResponseWriter, r *http.Request) {
 	// prepare api
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	svc := api.NewRoleServiceClient(apiClient)
+	
+	roleSvc := api.NewRoleServiceClient(apiClient)
 
 	switch r.Method {
 	case "GET":
 		// use the api to find a role
-		req := new(api.RoleReadReq)
-		req.ID = vars["id"]
-		res, err := svc.Read(ctx, req)
+		roleReq := new(api.RoleReadReq)
+		roleReq.ID = vars["id"]
+		roleRes, err := roleSvc.Read(ctx, roleReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -175,11 +180,11 @@ func roleReadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// render to page
-		render(w, r, "rolesRead.html",
+		render(w, r, "roleRead.html",
 			struct {
 				Role *api.Role
 			}{
-				Role: res.Role,
+				Role: roleRes.Role,
 			},
 		)
 	}
@@ -200,14 +205,14 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	// prepare api
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	svc := api.NewRoleServiceClient(apiClient)
+	roleSvc := api.NewRoleServiceClient(apiClient)
 
 	switch r.Method {
 	case "GET":
 		// use the api to find a role
-		req := new(api.RoleReadReq)
-		req.ID = vars["id"]
-		res, err := svc.Read(ctx, req)
+		roleReq := new(api.RoleReadReq)
+		roleReq.ID = vars["id"]
+		roleRes, err := roleSvc.Read(ctx, roleReq)
 		if err != nil {
 			log.Printf("controllers/rolesHandler.go > ERROR > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -223,7 +228,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// reder to page
-		render(w, r, "rolesUpsert.html",
+		render(w, r, "roleUpsert.html",
 			struct {
 				CSRF   template.HTML
 				Title  string
@@ -232,22 +237,21 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			}{
 				CSRF:   csrf.TemplateField(r),
 				Title:  "Update Role",
-				Role:   res.Role,
+				Role:   roleRes.Role,
 				Action: "Update",
 			},
 		)
 
 	case "POST":
 		// use api to update role
-		req := new(api.RoleUpdateReq)
-		req.Role = new(api.Role)
-		req.Role.ID = vars["id"]
-		req.Role.Name = r.FormValue("name")
-		req.Role.Description = r.FormValue("description")
-		req.Role.ModifiedBy = session.Values["username"].(string)
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		_, err := svc.Update(ctx, req)
+		roleReq := new(api.RoleUpdateReq)
+		roleReq.Role = new(api.Role)
+		roleReq.Role.ID = vars["id"]
+		roleReq.Role.Name = r.FormValue("name")
+		roleReq.Role.Description = r.FormValue("description")
+		roleReq.Role.ModifiedBy = session.Values["username"].(string)
+	
+		_, err := roleSvc.Update(ctx, roleReq)
 		if err != nil {
 			log.Printf("controllers/rolesHandler.go > ERROR > svc.Update(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -266,7 +270,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// redirect to roles list
-		http.Redirect(w, r, "/roles", http.StatusSeeOther)
+		http.Redirect(w, r, "/role/list", http.StatusSeeOther)
 	}
 }
 
@@ -285,14 +289,14 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// prepare api
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	svc := api.NewRoleServiceClient(apiClient)
+	roleSvc := api.NewRoleServiceClient(apiClient)
 
 	switch r.Method {
 	case "GET":
 		// use the api to find a role
 		readReq := new(api.RoleReadReq)
 		readReq.ID = vars["id"]
-		readRes, err := svc.Read(ctx, readReq)
+		readRes, err := roleSvc.Read(ctx, readReq)
 		if err != nil {
 			log.Printf("controllers/rolesHandler.go > ERROR > svc.Read(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -301,7 +305,7 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		// use the api to delete a role
 		deleteReq := new(api.RoleDeleteReq)
 		deleteReq.ID = vars["id"]
-		_, err = svc.Delete(ctx, deleteReq)
+		_, err = roleSvc.Delete(ctx, deleteReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -319,6 +323,6 @@ func roleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// redirect to roles list
-		http.Redirect(w, r, "/roles", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/role/list", http.StatusTemporaryRedirect)
 	}
 }

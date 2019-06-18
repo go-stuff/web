@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/csrf"
 )
 
-func serversHandler(w http.ResponseWriter, r *http.Request) {
+func serverListHandler(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := store.Get(r, "session")
 	if err != nil {
@@ -23,7 +23,7 @@ func serversHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// render to template
-	render(w, r, "servers.html", nil)
+	render(w, r, "serverList.html", nil)
 }
 
 func serverCreateHandler(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +42,7 @@ func serverCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// render to template
-	render(w, r, "serversUpsert.html",
+	render(w, r, "serverUpsert.html",
 		struct {
 			CSRF  template.HTML
 			Title string

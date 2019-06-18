@@ -6,13 +6,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/csrf"
-	"github.com/gorilla/mux"
+	//"github.com/gorilla/mux"
 )
 
 // Auth middleware authenticates users
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		path := r.URL.Path[1:]
 		var contentType string
 
@@ -55,10 +54,10 @@ func Auth(next http.Handler) http.Handler {
 		// in its own "X-CSRF-Token" request header on the subsequent POST.
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
-		currentRoute := mux.CurrentRoute(r)
-		pathTemplate, _ := currentRoute.GetPathTemplate()
+		// currentRoute := mux.CurrentRoute(r)
+		// pathTemplate, _ := currentRoute.GetPathTemplate()
 
-		_ = pathTemplate
+		// _ = pathTemplate
 		// get variables from uri
 		//vars := mux.Vars(r)
 		//log.Printf("\n\nr.RequestURI: %v\npathTemplate: %v\n\n", r.RequestURI, pathTemplate)
@@ -73,15 +72,16 @@ func Auth(next http.Handler) http.Handler {
 
 		session, err := store.Get(r, "session")
 		if err != nil {
-			log.Printf("middleware/auth.go > ERROR > Auth() > store.Get(): %s\n", err.Error())
+			log.Printf("ERROR > middleware/auth.go > Auth() > store.Get(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("middleware/auth.go > INFO > Auth() > store.Get(): %v %v\n", session.ID, session.Values["username"])
+
+		log.Printf("INFO > middleware/auth.go > Auth() > store.Get(): %v %v\n", session.ID, session.Values["username"])
 
 		// If this is a new session redirect to the login screen.
 		if session.IsNew && r.RequestURI != "/login" {
-			log.Println("middleware/auth.go > INFO > Auth() > Redirect to /login")
+			log.Println("INFO > middleware/auth.go > Auth() > Redirect to /login")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}

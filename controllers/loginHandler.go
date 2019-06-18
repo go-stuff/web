@@ -126,15 +126,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		// update user and groups in mongo to use with permissions middleware
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
+
 		userSvc := api.NewUserServiceClient(apiClient)
-		req := new(api.UserByUsernameReq)
-		req.Username = user.Username
-		foundRes, err := userSvc.ByUsername(ctx, req)
+
+		userReq := new(api.UserReadByUsernameReq)
+		userReq.Username = user.Username
+
+		foundRes, err := userSvc.ReadByUsername(ctx, userReq)
 		if err != nil {
 			if strings.Contains(err.Error(), mongo.ErrNoDocuments.Error()) {
 				// If they dont exist, add them
-				req := new(api.UserCreateReq)
-				req.User = &api.User{
+				userReq := new(api.UserCreateReq)
+				userReq.User = &api.User{
 					ID:         primitive.NewObjectID().Hex(),
 					Username:   user.Username,
 					Groups:     user.Groups,
@@ -144,9 +147,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 					ModifiedBy: "System",
 					ModifiedAt: ptypes.TimestampNow(),
 				}
-				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-				defer cancel()
-				_, err := userSvc.Create(ctx, req)
+
+				_, err := userSvc.Create(ctx, userReq)
 				if err != nil {
 					log.Printf("controllers/loginHandler.go > ERROR > userSvc.Create(): %s\n", err.Error())
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -159,15 +161,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			// If they do exist, update their groups
-			req := new(api.UserUpdateReq)
-			req.User = new(api.User)
-			req.User.ID = foundRes.User.ID
-			req.User.Username = user.Username
-			req.User.Groups = user.Groups
-			req.User.ModifiedBy = "System"
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			_, err := userSvc.Update(ctx, req)
+			userReq := new(api.UserUpdateReq)
+			userReq.User = new(api.User)
+			userReq.User.ID = foundRes.User.ID
+			userReq.User.Username = user.Username
+			userReq.User.Groups = user.Groups
+			userReq.User.ModifiedBy = "System"
+			
+			_, err := userSvc.Update(ctx, userReq)
 			if err != nil {
 				log.Printf("controllers/loginHandler.go > ERROR > userSvc.Update(): %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)

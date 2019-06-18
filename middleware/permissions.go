@@ -11,24 +11,23 @@ import (
 // Permissions allows or denies access to routes
 func Permissions(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		// Only process files that are not in the /static/ folder and not the favicon,ico.
 		if strings.Contains(r.RequestURI, "/static/") || strings.Contains(r.RequestURI, "/favicon.ico") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		log.Printf("middleware/permission.go > INFO > Permissions() > method: %v, %v\n", r.Method, r.RequestURI)
+		log.Printf("INFO > middleware/permission.go > Permissions() > method: %v, %v\n", r.Method, r.RequestURI)
 
 		currentRoute := mux.CurrentRoute(r)
 		pathTemplate, err := currentRoute.GetPathTemplate()
 		if err != nil {
-			log.Printf("middleware/permission.go > ERROR > currentRoute.GetPathTemplate(): %s\n", err.Error())
+			log.Printf("ERROR > middleware/permission.go > currentRoute.GetPathTemplate(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("middleware/permission.go > INFO > Permissions() > pathTemplate: %s\n", pathTemplate)
+		log.Printf("INFO > middleware/permission.go > Permissions() > pathTemplate: %s\n", pathTemplate)
 
 		// Get the regex version of the RequestURI.
 		// route := controllers.RouteToRegex(r.RequestURI)
@@ -50,7 +49,7 @@ func Permissions(next http.Handler) http.Handler {
 		// get session
 		session, err := store.Get(r, "session")
 		if err != nil {
-			log.Printf("middleware/Permissions.go > ERROR > store.Get(): %s\n", err.Error())
+			log.Printf("ERROR > middleware/Permissions.go > store.Get(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -64,6 +63,7 @@ func Permissions(next http.Handler) http.Handler {
 		// save session
 		err = session.Save(r, w)
 		if err != nil {
+			log.Printf("ERROR > middleware/Permissions.go > session.Save(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

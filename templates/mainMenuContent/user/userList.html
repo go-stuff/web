@@ -38,9 +38,9 @@
                 <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
                 <td class="is-hidden-mobile">{{ timestamp .ModifiedAt }}</td>
                 <td>
-                    <a class="button is-link is-small" href="/users/read/{{ .ID }}" aria-label="Read {{ .Username }}">Read</a>
-                    <a class="button is-info is-small" href="/users/update/{{ .ID }}" aria-label="Update {{ .Username }}">Update</a>
-                    <a class="button is-danger is-small" href="/users/delete/{{ .ID }}" aria-label="Delete {{ .Username }}">Delete</a>
+                    <a class="button is-link is-small" href="/user/read/{{ .ID }}" aria-label="Read {{ .Username }}">Read</a>
+                    <a class="button is-info is-small" href="/user/update/{{ .ID }}" aria-label="Update {{ .Username }}">Update</a>
+                    <a class="button is-danger is-small" href="/user/delete/{{ .ID }}" aria-label="Delete {{ .Username }}">Delete</a>
                 </td>
             </tr>
             {{ end }}
