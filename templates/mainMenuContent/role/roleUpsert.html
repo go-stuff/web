@@ -12,7 +12,7 @@
         <input class="input" type="text" name="description" id="description" value="{{ .Role.Description }}" required>
     </div>
     <input class="button is-primary" type="submit" name="add" value="{{ .Action }}">
-    <a class="button is-secondary" href="/roles">Cancel</a>
+    <a class="button is-secondary" href="/role/list">Cancel</a>
 </form>
 {{ if .Role.CreatedBy }}
 <hr>

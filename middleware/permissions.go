@@ -11,6 +11,8 @@ import (
 // Permissions allows or denies access to routes
 func Permissions(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// init err so that errors from other handlers are not passed on to this middleware
+		var err error
 
 		// Only process files that are not in the /static/ folder and not the favicon,ico.
 		if strings.Contains(r.RequestURI, "/static/") || strings.Contains(r.RequestURI, "/favicon.ico") {

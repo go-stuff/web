@@ -12,6 +12,8 @@ import (
 // Auth middleware authenticates users
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// init err so that errors from other handlers are not passed on to this middleware
+		var err error
 
 		path := r.URL.Path[1:]
 		var contentType string

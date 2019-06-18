@@ -30,11 +30,18 @@
                     {{ end }}
                 </td>
                 <td>{{ .Path }}</td>
-                <td>{{ .Permission }}</td>
+                <td>
+                    <label class="checkbox">
+                    <input type="checkbox" name="{{ .ID }}" {{ if .Permission }}checked{{ end }}>
+                        Select
+                    </label>
+                </td>
             </tr>
             {{ end }}
         </tbody>
     </table>
+    <hr>
+    <a class="button is-primary" href="/route/update">Update</a>
 </div>
 <script>
     $(document).ready(function() {
