@@ -41,10 +41,8 @@ func Permissions(next http.Handler) http.Handler {
 			return
 		}
 
-		if pathTemplate != "/" &&
-			pathTemplate != "/noauth" &&
+		if pathTemplate != "/noauth" &&
 			pathTemplate != "/login" &&
-			pathTemplate != "/login/noauth" &&
 			pathTemplate != "/logout" {
 
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -66,6 +64,7 @@ func Permissions(next http.Handler) http.Handler {
 			routeReq.Route = new(api.Route)
 			routeReq.Route.RoleID = roleid
 			routeReq.Route.Path = pathTemplate
+
 			routeRes, err := routeSvc.ReadByRoleIDAndPath(ctx, routeReq)
 			if err != nil {
 				log.Printf("ERROR > controllers/permissions.go > permissionFM() > routeSvc.RouteReadByRoleIDAndPath(): %s\n", err.Error())
@@ -101,5 +100,6 @@ func Permissions(next http.Handler) http.Handler {
 
 		// Send the results of this http request to the next handler.
 		next.ServeHTTP(w, r)
+		return
 	})
 }

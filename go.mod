@@ -3,9 +3,10 @@ module github.com/go-stuff/web
 go 1.12
 
 require (
-	github.com/go-stuff/grpc v0.0.0-20190618133428-6a974c8a4031
+	github.com/davecgh/go-spew v1.1.1
+	github.com/go-stuff/grpc v0.0.0-20190630115153-3a2fafb8369a
 	github.com/go-stuff/ldap v0.0.2
-	github.com/go-stuff/mongostore v0.1.16
+	github.com/go-stuff/mongostore v0.1.17
 	github.com/golang/protobuf v1.3.1
 	github.com/gorilla/csrf v1.5.1
 	github.com/gorilla/mux v1.7.2

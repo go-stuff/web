@@ -15,22 +15,25 @@ import (
 	"github.com/go-stuff/grpc/api"
 )
 
-func CompileRoutes() error {
+func routeSeed() error {
+	// walk and get the routes and sort them
 	routes = nil
 	router.Walk(gorillaWalkFunc)
 	sort.Strings(routes)
 
+	// create a context
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	// gRPC role and route services
 	roleSvc := api.NewRoleServiceClient(apiClient)
 	routeSvc := api.NewRouteServiceClient(apiClient)
 
-	// get all roles
+	// gRPC get all roles
 	roleReq := new(api.RoleListReq)
 	roleRes, err := roleSvc.List(ctx, roleReq)
 	if err != nil {
-		log.Printf("ERROR > controllers/roleHandler.go > CompileRoutes() > roleSvc.List(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/roleHandler.go > routeSeed() > roleSvc.List(): %s\n", err.Error())
 		return err
 	}
 
@@ -38,37 +41,62 @@ func CompileRoutes() error {
 	routeReq := new(api.RouteListReq)
 	routeRes, err := routeSvc.List(ctx, routeReq)
 	if err != nil {
-		log.Printf("ERROR > controllers/routeHandler.go > CompileRoutes() > routeSvc.List(): %s\n", err.Error())
+		log.Printf("ERROR > controllers/routeHandler.go > routeSeed() > routeSvc.List(): %s\n", err.Error())
 		return err
 	}
 
-	// iterate over roles and routes
-	for _, s := range routes {
-		log.Printf("INFO > controllers/routeHandler.go > CompileRoutes(): - %v\n", s)
-
+	// iterate over roles and routes and delete any routes for roles that do not exist
+	for _, route := range routeRes.Routes {
+		var found bool
 		for _, role := range roleRes.Roles {
+			if role.ID == route.RoleID {
+				found = true
+			}
+		}
+		if !found {
+			deleteReq := new(api.RouteDeleteReq)
+			deleteReq.ID = route.ID
+			deleteRes, err := routeSvc.Delete(ctx, deleteReq)
+			if err != nil {
+				log.Printf("ERROR > controllers/routeHandler.go > routeSeed() > routeSvc.Delete(): %s\n", err.Error())
+				return err
+			}
+			if deleteRes.Deleted > 0 {
+				log.Printf("INFO > controllers/routeHandler.go > routeSeed(): - delete %v %v\n", route.RoleID, route.Path)
+			}
+		}
+	}
 
+	// iterate over roles and routes and create any that are missing
+	for _, s := range routes {
+		for _, role := range roleRes.Roles {
 			var found bool
 			for _, route := range routeRes.Routes {
 				if role.ID == route.RoleID && s == route.Path {
 					found = true
 				}
 			}
-			if found {
-				// log.Println("found")
-			} else {
-				// log.Println("not found")
+			if !found {
+				updateReq := new(api.RouteUpdateByRoleIDAndPathReq)
+				updateReq.RoleID = role.ID
+				updateReq.Path = s
 
-				uReq := new(api.RouteUpdateByRoleIDAndPathReq)
-				uReq.Route = &api.Route{
-					RoleID: role.ID,
-					Path:   s,
+				if role.Name == "Admin" {
+					updateReq.Permission = true
 				}
-				uRes, err := routeSvc.UpdateByRoleIDAndPath(ctx, uReq)
+				if role.Name == "Read Only" {
+					if s == "/" || s == "/home" || s == "/server/list" {
+						updateReq.Permission = true
+					}
+				}
+				updateRes, err := routeSvc.UpdateByRoleIDAndPath(ctx, updateReq)
 				if err != nil {
+					log.Printf("ERROR > controllers/routeHandler.go > routeSeed() > routeSvc.UpdateByRoleIDAndPath(): %s\n", err.Error())
 					return err
 				}
-				log.Println(uRes.Updated)
+				if updateRes.Updated > 0 {
+					log.Printf("INFO > controllers/routeHandler.go > routeSeed(): - update %v %v\n", role.ID, s)
+				}
 			}
 		}
 	}
@@ -83,7 +111,6 @@ func gorillaWalkFunc(route *mux.Route, router *mux.Router, ancestors []*mux.Rout
 	}
 	switch pathTemplate {
 	case
-		"/",
 		"/login",
 		"/logout",
 		"/noauth",
@@ -96,20 +123,30 @@ func gorillaWalkFunc(route *mux.Route, router *mux.Router, ancestors []*mux.Rout
 }
 
 func routeListHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	// get session
+	session, err := store.Get(r, "session")
+	if err != nil {
+		log.Printf("ERROR > controllers/routeHandler.go > routeListHandler() > store.Get(): %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	roleSvc := api.NewRoleServiceClient(apiClient)
-	routeSvc := api.NewRouteServiceClient(apiClient)
-
+	// handle each method
 	switch r.Method {
 	case "GET":
+		// create a context
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		// gRPC role and route services
+		roleSvc := api.NewRoleServiceClient(apiClient)
+		routeSvc := api.NewRouteServiceClient(apiClient)
 
 		// get all roles
 		roleReq := new(api.RoleListReq)
 		roleRes, err := roleSvc.List(ctx, roleReq)
 		if err != nil {
-			log.Printf("controllers/rolesHandler.go > ERROR > roleSvc.List(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/rolesHandler.go > roleSvc.List(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -118,7 +155,7 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
 		routeReq := new(api.RouteListReq)
 		routeRes, err := routeSvc.List(ctx, routeReq)
 		if err != nil {
-			log.Printf("controllers/routesHandler.go > ERROR > routeSvc.List(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/routesHandler.go > routeSvc.List(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -146,26 +183,18 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// create a context
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		//roleSvc := api.NewRoleServiceClient(apiClient)
+		// gRPC route service
 		routeSvc := api.NewRouteServiceClient(apiClient)
-
-		// // get all roles
-		// roleReq := new(api.RoleListReq)
-		// roleRes, err := roleSvc.List(ctx, roleReq)
-		// if err != nil {
-		// 	log.Printf("controllers/rolesHandler.go > ERROR > roleSvc.List(): %s\n", err.Error())
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
 
 		// get all routes
 		routeReq := new(api.RouteListReq)
 		routeRes, err := routeSvc.List(ctx, routeReq)
 		if err != nil {
-			log.Printf("controllers/routesHandler.go > ERROR > routeSvc.List(): %s\n", err.Error())
+			log.Printf("ERROR > controllers/routesHandler.go > routeSvc.List(): %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -173,7 +202,7 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
 		// range over hidden checkbox fields
 		for _, route := range routeRes.Routes {
 			cbp := fmt.Sprintf("%v", r.Form.Get("hidden"+route.ID))
-			log.Printf("%v: %v\n", route.ID, cbp)
+
 			if cbp == "" {
 				route.Permission = false
 			} else {
@@ -181,37 +210,28 @@ func routeListHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			routeReq := new(api.RouteUpdateByRoleIDAndPathReq)
-			log.Printf("routeReq: %v\n", routeReq.Route)
-
-			routeReq.Route = route
-
-			// routeReq.Route.ID = route.ID
-			// routeReq.Route.RoleID = route.RoleID
-			// routeReq.Route.Path = route.Path
-			// routeReq.Route.Permission = route.Permission
+			routeReq.RoleID = route.RoleID
+			routeReq.Path = route.Path
+			routeReq.Permission = route.Permission
+			routeReq.ModifiedBy = "System"
 
 			routeRes, err := routeSvc.UpdateByRoleIDAndPath(ctx, routeReq)
 			if err != nil {
-				log.Printf("controllers/routesHandler.go > ERROR > routeSvc.List(): %s\n", err.Error())
+				log.Printf("ERROR > controllers/routesHandler.go > routeSvc.UpdateByRoleIDAndPath(): %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			log.Printf("update: %v", routeRes.Updated)
-
-			//log.Printf("route: %v, permission: %v\n", route.Path, route.Permission)
+			log.Printf("INFO > controllers/routesHandler.go > routeSvc.UpdateByRoleIDAndPath(): %v\n", routeRes.Updated)
 		}
 
-		// for i := 0; i < len(routeRes.Routes); i++ {
-		// 	cbp := fmt.Sprintf("%v", r.Form.Get("hidden"+routeRes.Routes[i].ID))
-		// 	log.Printf("hidden%v: %v\n", routeRes.Routes[i].ID, cbp)
-		// 	if cbp == "" {
-		// 		routeRes.Routes[i].Permission = false
-		// 	} else {
-		// 		routeRes.Routes[i].Permission = true
-		// 	}
-		// 	//log.Printf("route: %v, permission: %v\n", routeRes.Routes[i].Path, routeRes.Routes[i].Permission)
-		// }
-
 		http.Redirect(w, r, "/route/list", http.StatusSeeOther)
+	}
+
+	// save session
+	err = store.Save(r, w, session)
+	if err != nil {
+		log.Printf("ERROR > controllers/routeHandler.go > routeListHandler() > sessions.Save(): %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }

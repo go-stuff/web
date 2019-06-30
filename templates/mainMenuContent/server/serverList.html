@@ -5,83 +5,38 @@
     {{ .Notification }}
 </div>
 {{ end }}
-<h1 class="title is-3">Servers</h1>
-<hr>
-<div id="hide" >
-    <script>
-        var hide = document.getElementById("hide");
-        hide.style.display = "none";
-    </script>
-    <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
-        <thead>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">Description</th>
-                <th scope="col" class="is-hidden-mobile">Created By</th>
-                <th scope="col" class="is-hidden-mobile">Created At</th>
-                <th scope="col" class="is-hidden-mobile">Modified By</th>
-                <th scope="col" class="is-hidden-mobile">Modified At</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{ range $index, $results := .Servers }}
-            <tr>
-                <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                <td>{{ .Name }}</td>
-                <td>{{ .Description }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
-                <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
-                <td>
-                    <a class="button is-link is-small" href="/server/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
-                    <a class="button is-info is-small" href="/server/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
-                    <a class="button is-danger is-small" href="/server/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>
-                </td>
-            </tr>
-            {{ end }}
-        </tbody>
-    </table>
-    <hr>
-    {{ if P "/server/create" }}
-    <a class="button is-primary" href="/server/create">Create</a>
-    {{ end }}
-</div>
-<script>
-    $(document).ready(function() {
-        // Setup - add a text input to each footer cell
-        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
-        $('#datatable thead tr:eq(1) th').each( function (i) {
-            var title = $(this).text();
-            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
-    
-            $( 'input', this ).on( 'keyup change', function () {
-                if ( table.column(i).search() !== this.value ) {
-                    table
-                        .column(i)
-                        .search( this.value )
-                        .draw();
-                }
-            } );
-        } );
-        var table = $('#datatable').DataTable({
-            orderCellsTop: true,
-            fixedHeader: true,
-            "order": [[ 1, "asc" ]],
-            "initComplete": function(){
-                $('#hide').show();
-            }
-        });
-    });
-    document.addEventListener('DOMContentLoaded', () => {
-        (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
-            $notification = $delete.parentNode;
-            $delete.addEventListener('click', () => {
-                $notification.parentNode.removeChild($notification);
-            });
-        });
-    });
-</script>
+<h1>Servers</h1>
+<table id="datatable" class="table table-striped table-bordered" style="width: 100%">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col" class="is-hidden-mobile">Created By</th>
+            <th scope="col" class="is-hidden-mobile">Created At</th>
+            <th scope="col" class="is-hidden-mobile">Modified By</th>
+            <th scope="col" class="is-hidden-mobile">Modified At</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range $index, $results := .Servers }}
+        <tr>
+            <th>{{ .Name }}</th>
+            <td>{{ .Description }}</td>
+            <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
+            <td class="is-hidden-mobile">{{ .CreatedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
+            <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
+            <td class="is-hidden-mobile">{{ .ModifiedAt.Format "2006-Jan-02 03:04:05 PM MST" }}</td>
+            <td>
+                <a class="btn btn-info" href="/server/read/{{ .ID }}" aria-label="Read {{ .Name }}"><i class="far fa-edit"></a>
+                <a class="btn btn-primary" href="/server/update/{{ .ID }}" aria-label="Update {{ .Name }}"><i class="far fa-eye"></i></a>
+                <a class="btn btn-danger" href="/server/delete/{{ .ID }}" aria-label="Delete {{ .Name }}"><i class="far fa-trash-alt"></i></a>
+            </td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
+{{ if P "/server/create" }}
+<a class="button is-primary" href="/server/create">Create</a>
+{{ end }}
 {{ end }}

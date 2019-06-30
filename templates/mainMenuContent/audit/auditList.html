@@ -1,0 +1,24 @@
+{{ define "content" }}
+<h1>Audit</h1>
+<hr>
+<table id="datatable" class="table table-striped table-bordered" style="width: 100%">
+    <thead>
+        <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Action</th>
+            <th scope="col">Session</th>
+            <th scope="col" class="is-hidden-mobile">Created At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range .Audit }}
+        <tr>
+            <th>{{ .Username }}</th>
+            <td>{{ .Action }}</td>
+            <td>{{ .Session }}</td>
+            <td>{{ timestamp .CreatedAt }}</td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
+{{ end }}

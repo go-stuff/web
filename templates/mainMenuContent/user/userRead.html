@@ -1,0 +1,15 @@
+{{ define "content" }}
+<h1>User</h1>
+<hr>
+<p><strong>Username: </strong>{{ .User.Username }}</p>
+<p><strong>Role: </strong>
+    {{ range $role := $.Roles }}
+        {{ if eq $role.ID $.User.RoleID }}
+            {{ $role.Name }}
+        {{ end }}
+    {{ end }}
+</p>
+<hr>
+<p><strong>Created by:</strong> {{ .User.CreatedBy }} @ {{ timestamp .User.CreatedAt }}</p>
+<p><strong>Modified by:</strong> {{ .User.ModifiedBy }} @ {{ timestamp .User.ModifiedAt }}</p>
+{{ end }}

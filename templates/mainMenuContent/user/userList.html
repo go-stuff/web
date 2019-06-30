@@ -1,89 +1,40 @@
 {{ define "content" }}
 {{ if .Notification }}
-<div class="notification is-success">
+<div class="alert alert-success alert-dismissible fade show" role="alert">
     {{ .Notification }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
 {{ end }}
-<h1 class="title is-3">Users</h1>
+<h1>Users</h1>
 <hr>
-<div id="hide" style="display: none;">
-    <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
-        <thead>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">Username</th>
-                <th scope="col">Role</th>
-                <th scope="col" class="is-hidden-mobile">Created By</th>
-                <th scope="col" class="is-hidden-mobile">Created At</th>
-                <th scope="col" class="is-hidden-mobile">Modified By</th>
-                <th scope="col" class="is-hidden-mobile">Modified At</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{ range $index, $user := .Users }}
-            <tr>
-                <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                <td>{{ .Username }}</td>
-                <td>
-                    {{ range $role := $.Roles }}
-                        {{ if eq $role.ID $user.RoleID }}
-                            {{ $role.Name }}
-                        {{ end }}
+<table id="datatable" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Role</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range $index, $user := .Users }}
+        <tr>
+            <td>{{ .Username }}</td>
+            <td>
+                {{ range $role := $.Roles }}
+                    {{ if eq $role.ID $user.RoleID }}
+                        {{ $role.Name }}
                     {{ end }}
-                    </div>
-                </td>
-                <td class="is-hidden-mobile">{{ .CreatedBy }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
-                <td class="is-hidden-mobile">{{ .ModifiedBy }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .ModifiedAt }}</td>
-                <td>
-                    <a class="button is-link is-small" href="/user/read/{{ .ID }}" aria-label="Read {{ .Username }}">Read</a>
-                    <a class="button is-info is-small" href="/user/update/{{ .ID }}" aria-label="Update {{ .Username }}">Update</a>
-                    <a class="button is-danger is-small" href="/user/delete/{{ .ID }}" aria-label="Delete {{ .Username }}">Delete</a>
-                </td>
-            </tr>
-            {{ end }}
-        </tbody>
-        <tfoot>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">Username</th>
-                <th scope="col">Role</th>
-                <th scope="col" class="is-hidden-mobile">Created By</th>
-                <th scope="col" class="is-hidden-mobile">Created At</th>
-                <th scope="col" class="is-hidden-mobile">Modified By</th>
-                <th scope="col" class="is-hidden-mobile">Modified At</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </tfoot>
-    </table>
-</div>
-<script>
-    $(document).ready(function() {
-        // Setup - add a text input to each footer cell
-        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
-        $('#datatable thead tr:eq(1) th').each( function (i) {
-            var title = $(this).text();
-            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
-    
-            $( 'input', this ).on( 'keyup change', function () {
-                if ( table.column(i).search() !== this.value ) {
-                    table
-                        .column(i)
-                        .search( this.value )
-                        .draw();
-                }
-            } );
-        } );
-        var table = $('#datatable').DataTable({
-            orderCellsTop: true,
-            fixedHeader: true,
-            "order": [[ 1, "asc" ]],
-            "initComplete": function(){
-                $('#hide').show();
-            }
-        });
-    });
-</script>
+                {{ end }}
+            </td>
+            <td>
+                <a class="btn btn-info btn-sm" href="/user/read/{{ .ID }}" aria-label="Read {{ .Username }}" style="margin: 0;"><i class="far fa-eye"></i></a>
+                <a class="btn btn-primary btn-sm" href="/user/update/{{ .ID }}" aria-label="Update {{ .Username }}" style="margin: 0;"><i class="far fa-edit"></i></a>
+                <a class="btn btn-danger btn-sm" href="/user/delete/{{ .ID }}" aria-label="Delete {{ .Username }}" style="margin: 0;"><i class="far fa-trash-alt"></i></a>
+            </td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
 {{ end }}

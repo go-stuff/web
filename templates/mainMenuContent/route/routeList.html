@@ -1,104 +1,50 @@
 {{ define "content" }}
 {{ if .Notification }}
-<div class="notification is-success">
+<div class="alert alert-success alert-dismissible fade show" role="alert">
     {{ .Notification }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
 {{ end }}
-<h1 class="title is-3">Routes</h1>
+<h1>Routes</h1>
 <hr>
 <form method="post">
     {{ .CSRF }}
-    <div id="hide" style="display: none;">
-        <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
-            <thead>
-                <tr>
-                    <th scope="col" class="is-hidden-mobile">#</th>
-                    <th scope="col">RoleID</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Route</th>
-                    <th scope="col">Permission</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{ range $index, $route := .Routes }}
-                <tr>
-                    <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                    <td>{{ .RoleID }}</td>
-                    <td>
-                        {{ range $role := $.Roles }}
-                            {{ if eq $role.ID $route.RoleID }}
-                                {{ $role.Name }}
-                            {{ end }}
+    <table id="datatable" class="table table-striped table-bordered" style="width: 100%">
+        <thead>
+            <tr>
+                <th scope="col">Role</th>
+                <th scope="col">Route</th>
+                <th scope="col">Permission</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range $index, $route := .Routes }}
+            <tr>
+                <th>
+                    {{ range $role := $.Roles }}
+                        {{ if eq $role.ID $route.RoleID }}
+                            {{ $role.Name }}
                         {{ end }}
-                    </td>
-                    <td>{{ .Path }}</td>
-                    <td>
-                        <label class="checkbox">
-                        <input type="checkbox" name="{{ .ID }}" id="{{ .ID }}" onchange="toggleCheckbox(this)" {{ if .Permission }}checked{{ end }}>
-                            Select
-                        </label>
-                    </td>
-                </tr>
-                {{ end }}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <th scope="col" class="is-hidden-mobile">#</th>
-                    <th scope="col">RoleID</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Route</th>
-                    <th scope="col">Permission</th>
-                </tr>
-            </tfoot>
-        </table>
-        <hr>
-        <input class="button is-primary" type="submit" name="update" value="Update">
-        <a class="button is-secondary" href="/route/list">Cancel</a>
-        {{range $index, $element := .Routes}} 
-        <input type="hidden" id="hidden{{ $element.ID }}" name="hidden{{ $element.ID }}" value="{{ if $element.Permission }}checked{{ end }}">
-        {{end}}    
-    </div>
+                    {{ end }}
+                </th>
+                <td>{{ .Path }}</td>
+                <td>
+                    <label class="checkbox">
+                    <input type="checkbox" name="{{ .ID }}" id="{{ .ID }}" onchange="toggleCheckbox(this)" {{ if .Permission }}checked{{ end }}>
+                        Select
+                    </label>
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+    <hr>
+    <input class="btn btn-primary" type="submit" name="update" value="Update">
+    <a class="btn btn-secondary" href="/route/list">Cancel</a>
+    {{range $index, $element := .Routes}} 
+    <input type="hidden" id="hidden{{ $element.ID }}" name="hidden{{ $element.ID }}" value="{{ if $element.Permission }}checked{{ end }}">
+    {{end}}
 </form>
-<script>
-    $(document).ready(function() {
-        // Setup - add a text input to each footer cell
-        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
-        $('#datatable thead tr:eq(1) th').each( function (i) {
-            var title = $(this).text();
-            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
-    
-            $( 'input', this ).on( 'keyup change', function () {
-                if ( table.column(i).search() !== this.value ) {
-                    table
-                        .column(i)
-                        .search( this.value )
-                        .draw();
-                }
-            } );
-        } );
-        var table = $('#datatable').DataTable({
-            orderCellsTop: true,
-            fixedHeader: true,
-            "order": [[ 1, "asc" ]],
-            "initComplete": function(){
-                $('#hide').show();
-            }
-        });
-    });
-    // Since Go ParseForm is unable to collect data from the paginated checkboxes that 
-    // are out of view. Hidden form inputs that match the checkboxes have been added
-    // to collect checkbox data.
-    function toggleCheckbox(element)
-    {
-        var name = $(element).attr("name");
-        var hiddenElement = "#hidden" + name;
-        if ($(element).is(":checked")) { 
-            $(element).val("checked");
-            $(hiddenElement).val("checked");
-        } else {
-            $(element).val("");
-            $(hiddenElement).val("");
-        }
-    }
-</script>
 {{ end }}

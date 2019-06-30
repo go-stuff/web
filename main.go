@@ -15,7 +15,6 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/securecookie"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	"github.com/go-stuff/mongostore"
 	"github.com/go-stuff/web/controllers"
@@ -43,6 +42,11 @@ func main() {
 	apiClient, err := initAPI()
 	defer apiClient.Close()
 
+	// get database name from an environment variable
+	if os.Getenv("MONGOSTORE_HTTPS_ONLY") == "" {
+		os.Setenv("MONGOSTORE_HTTPS_ONLY", "false")
+	}
+
 	// set a default session ttl to 20 minutes
 	if os.Getenv("MONGOSTORE_SESSION_TTL") == "" {
 		os.Setenv("MONGOSTORE_SESSION_TTL", strconv.Itoa(20*60))
@@ -57,6 +61,11 @@ func main() {
 	// get database name from an environment variable
 	if os.Getenv("MONGO_DB_NAME") == "" {
 		os.Setenv("MONGO_DB_NAME", "test")
+	}
+
+	// users in this ad group are admins by default
+	if os.Getenv("ADMIN_AD_GROUP") == "" {
+		os.Setenv("ADMIN_AD_GROUP", "SomeADGroup")
 	}
 
 	// init store
@@ -102,8 +111,10 @@ func main() {
 
 	// apply middleware
 	router.Use(middlewareCSRF)
+	router.Use(middleware.Headers)
 	router.Use(middleware.Auth) // Auth should be before Permissions
 	router.Use(middleware.Permissions)
+	router.Use(middleware.Audit)
 
 	// init server
 	server := &http.Server{
@@ -116,7 +127,8 @@ func main() {
 
 	// start server
 	log.Println("INFO > main.go > main(): Listening and Serving @", server.Addr)
-	err = server.ListenAndServeTLS("./cert.pem", "./key.pem")
+	//err = server.ListenAndServeTLS("./cert.pem", "./key.pem")
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,8 +189,16 @@ func initMongoClient() (*mongo.Client, context.Context, error) {
 		os.Setenv("MONGOURL", "mongodb://localhost:27017")
 	}
 
+	// Register custom codecs for protobuf Timestamp and wrapper types
+	//reg := bsoncodec.Registry()
+	//reg := bsoncodec.NewRegistryBuilder().Build()
+
 	// connect does not do server discovery, use ping
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGOURL")))
+	client, err := mongo.Connect(ctx,
+		options.Client().
+			ApplyURI(os.Getenv("MONGOURL")), //.
+		//	SetRegistry(reg),
+	)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -225,14 +245,14 @@ func initMongoStore(col *mongo.Collection, age int) (*mongostore.MongoStore, err
 }
 
 func initAPI() (*grpc.ClientConn, error) {
-	creds, err := credentials.NewClientTLSFromFile("./certs/cert.pem", "")
-	if err != nil {
-		return nil, err
-	}
+	// creds, err := credentials.NewClientTLSFromFile("./certs/cert.pem", "")
+	// if err != nil {
+	// 	return nil, err
+	// }
 	// with cert
-	conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithTransportCredentials(creds))
+	//conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithTransportCredentials(creds))
 	// without cert
-	// conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:6000", grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

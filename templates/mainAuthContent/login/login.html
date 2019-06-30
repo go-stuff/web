@@ -1,0 +1,37 @@
+{{ define "content" }}
+{{ if .Error }}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ .Error }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{{ end }}
+<div class="row justify-content-center">
+    <div class="col-4">
+        <h1>Login</h1>
+        <form method="post">
+            {{ .CSRF }}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input class="form-control" type="text" name="username" id="username" value="{{ .Username }}" required pattern="[0-9A-Za-z/\s-]*">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input class="form-control" type="password" name="password" id="password" required>
+            </div>
+            <input class="btn btn-primary" type="submit" name="login" value="Login">
+        </form>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+            $notification = $delete.parentNode;
+            $delete.addEventListener('click', () => {
+                $notification.parentNode.removeChild($notification);
+            });
+        });
+    });
+</script>
+{{ end }}

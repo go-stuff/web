@@ -14,7 +14,6 @@ import (
 	"github.com/go-stuff/mongostore"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
 
@@ -46,7 +45,17 @@ func Init(mongoclient *mongo.Client, mongostore *mongostore.MongoStore, apiclien
 
 	router = initRouter()
 
-	CompileRoutes()
+	// seed roles
+	err = roleSeed()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// seed routes
+	err = routeSeed()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return router
 }
@@ -57,8 +66,14 @@ func initTemplates() error {
 	// initialize the content files templates map
 	templates = make(map[string]*template.Template)
 
+	// build templates with auth and content
+	err := initTemplatesWithAuthAndContent()
+	if err != nil {
+		return err
+	}
+
 	// build templates with content
-	err := initTemplatesWithContent()
+	err = initTemplatesWithContent()
 	if err != nil {
 		return err
 	}
@@ -69,16 +84,35 @@ func initTemplates() error {
 		return err
 	}
 
-	// // build noauth template
-	// err = initTemplateNoAuth()
-	// if err != nil {
-	// 	return err
-	// }
+	return nil
+}
+
+func initTemplatesWithAuthAndContent() error {
+	log.Println("INFO > controllers/controllers.go > initTemplatesWithAuthAndContent()")
+
+	layout = template.New("mainAuthContent.html")
+
+	layout.Funcs(timestampFM())
+	layout.Funcs(permissionFM(nil))
+
+	// check the validity of login.html by parsing
+	_, err := layout.ParseFiles(
+		"./templates/layout/mainAuthContent.html",
+		"./templates/layout/head.html",
+		"./templates/layout/header.html",
+		"./templates/layout/footer.html",
+		"./templates/layout/script.html",
+	)
+	if err != nil {
+		return err
+	}
+
+	// recurse content files templates and build separate templates for each of them
+	filepath.Walk("./templates/mainAuthContent", walkTemplatesPath)
 
 	return nil
 }
 
-// <html> head, header, content, footer </html
 func initTemplatesWithContent() error {
 	log.Println("INFO > controllers/controllers.go > initTemplatesWithContent()")
 
@@ -88,13 +122,17 @@ func initTemplatesWithContent() error {
 	layout.Funcs(permissionFM(nil))
 
 	// check the validity of login.html by parsing
-	layout.ParseFiles(
+	_, err := layout.ParseFiles(
 		"./templates/layout/mainContent.html",
 		"./templates/layout/head.html",
 		"./templates/layout/header.html",
-		"./templates/layout/bypass.html",
+		"./templates/layout/logout.html",
 		"./templates/layout/footer.html",
+		"./templates/layout/script.html",
 	)
+	if err != nil {
+		return err
+	}
 
 	// recurse content files templates and build separate templates for each of them
 	filepath.Walk("./templates/mainContent", walkTemplatesPath)
@@ -102,7 +140,6 @@ func initTemplatesWithContent() error {
 	return nil
 }
 
-// <html> head, header, menu, content, footer </html
 func initTemplatesWithNavAndContent() error {
 	log.Println("INFO > controllers/controllers.go > initTemplatesWithNavAndContent()")
 	//var err error
@@ -113,52 +150,24 @@ func initTemplatesWithNavAndContent() error {
 	layout.Funcs(permissionFM(nil))
 
 	// check the validity of the files that make up layout.html by parsing
-	layout.ParseFiles(
+	_, err := layout.ParseFiles(
 		"./templates/layout/mainNavContent.html",
 		"./templates/layout/head.html",
 		"./templates/layout/header.html",
-		"./templates/layout/bypass.html",
-		"./templates/layout/logout.html",
 		"./templates/layout/nav.html",
+		"./templates/layout/logout.html",
 		"./templates/layout/footer.html",
+		"./templates/layout/script.html",
 	)
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
 	// recurse content files templates and build separate templates for each of them
 	filepath.Walk("./templates/mainMenuContent", walkTemplatesPath)
 
 	return nil
 }
-
-// // <html> head, header, menu, content, footer </html
-// func initTemplateNoAuth() error {
-// 	log.Println("INFO > controllers/controllers.go > initTemplateNoAuth()")
-// 	//var err error
-
-// 	layout = template.New("mainContent.html")
-
-// 	layout.Funcs(timestampFM())
-// 	layout.Funcs(permissionFM(nil))
-
-// 	// check the validity of the files that make up layout.html by parsing
-// 	layout.ParseFiles(
-// 		"./templates/layout/mainContent.html",
-// 		"./templates/layout/head.html",
-// 		"./templates/layout/header.html",
-// 		"./templates/layout/bypass.html",
-// 		"./templates/layout/footer.html",
-// 	)
-// 	// if err != nil {
-// 	// 	return err
-// 	// }
-
-// 	// recurse content files templates and build separate templates for each of them
-// 	filepath.Walk("./templates/mainNoAuth", walkTemplatesPath)
-
-// 	return nil
-// }
 
 // recurse a directory and build templates
 func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
@@ -203,16 +212,6 @@ func walkTemplatesPath(path string, fileInfo os.FileInfo, err error) error {
 func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{}) {
 	log.Printf("INFO > controllers/controllers.go > render(): %s", tmpl)
 
-	// var tpl bytes.Buffer
-	// e := templates[tmpl].Execute(&tpl, data)
-	// if e != nil {
-	// 	log.Println(tmpl)
-
-	// }
-	// log.Println(e)
-	// log.Printf("\ntmpl: %v\n", templates[tmpl])
-	// log.Printf("\nbytes: %v\n", tpl.String())
-
 	// Set the content type.
 	w.Header().Set("Content-Type", "text/html")
 
@@ -223,7 +222,6 @@ func render(w http.ResponseWriter, r *http.Request, tmpl string, data interface{
 	err := templates[tmpl].Execute(w, data)
 	if err != nil {
 		log.Printf("ERROR > controllers.go > render(): %v", err)
-		//fmt.Println(err)
 	}
 }
 
@@ -233,27 +231,30 @@ func initRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	// System Routes
-	router.HandleFunc("/session/list", sessionListHandler).Methods("GET")
-
-	router.HandleFunc("/role/list", roleListHandler).Methods("GET")
-	router.HandleFunc("/role/create", roleCreateHandler).Methods("GET", "POST")
-	router.HandleFunc("/role/read/{id}", roleReadHandler).Methods("GET")
-	router.HandleFunc("/role/update/{id}", roleUpdateHandler).Methods("GET", "POST")
-	router.HandleFunc("/role/delete/{id}", roleDeleteHandler).Methods("GET")
-
-	router.HandleFunc("/route/list", routeListHandler).Methods("GET", "POST")
-
-	router.HandleFunc("/user/list", userListHandler).Methods("GET")
-	router.HandleFunc("/user/update/{id}", userUpdateHandler).Methods("GET", "POST")
-	router.HandleFunc("/user/delete/{id}", userDeleteHandler).Methods("GET")
+	router.HandleFunc("/audit/list100", auditList100Handler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("GET", "POST")
 	router.HandleFunc("/logout", loginHandler).Methods("GET")
 
 	router.HandleFunc("/noauth", noauthHandler).Methods("GET")
 
+	router.HandleFunc("/role/list", roleListHandler).Methods("GET")
+	router.HandleFunc("/role/create", roleCreateHandler).Methods("GET", "POST")
+	router.HandleFunc("/role/read/{id}", roleReadHandler).Methods("GET")
+	router.HandleFunc("/role/update/{id}", roleUpdateHandler).Methods("GET", "POST")
+	router.HandleFunc("/role/delete/{id}", roleDeleteHandler).Methods("POST")
+
+	router.HandleFunc("/route/list", routeListHandler).Methods("GET", "POST")
+
+	router.HandleFunc("/session/list", sessionListHandler).Methods("GET")
+
+	router.HandleFunc("/user/list", userListHandler).Methods("GET")
+	router.HandleFunc("/user/read/{id}", userReadHandler).Methods("GET")
+	router.HandleFunc("/user/update/{id}", userUpdateHandler).Methods("GET", "POST")
+	router.HandleFunc("/user/delete/{id}", userDeleteHandler).Methods("GET")
+
 	// App Routes
-	router.HandleFunc("/", rootHandler).Methods("GET", "POST")
+	router.HandleFunc("/", homeHandler).Methods("GET", "POST")
 	router.HandleFunc("/home", homeHandler).Methods("GET")
 
 	router.HandleFunc("/server/list", serverListHandler).Methods("GET")
@@ -264,27 +265,6 @@ func initRouter() *mux.Router {
 
 	return router
 }
-
-// func initPermissions() error {
-// 	// call api to get a slice of permissions
-// 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-// 	defer cancel()
-// 	svc :=  api.NewPermissionServiceClient(apiClient)
-// 	req := new(api.PermissionSliceReq)
-// 	slice, err := svc.Slice(ctx, req)
-// 	if err != nil {
-// 		log.Printf("controllers/controllers.go > ERROR > svc.Slice(): %s\n", err.Error())
-// 		return err
-// 	}
-
-// 	permissions = make(map[string]string)
-
-// for _, permission := range slice.Permissions {
-// 	permissions[permission.RoleID] = permission.Route
-// }
-
-// return nil
-// }
 
 // format timestamps
 func timestampFM() template.FuncMap {
@@ -320,9 +300,6 @@ func permissionFM(r *http.Request) template.FuncMap {
 				return false
 			}
 
-			//currentRoute := mux.CurrentRoute(r)
-			//pathTemplate, _ := currentRoute.GetPathTemplate()
-
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
@@ -350,8 +327,24 @@ func permissionFM(r *http.Request) template.FuncMap {
 }
 
 // addNotification adds a notification message to session.Values
-func addNotification(session *sessions.Session, notification string) {
+func addNotification(w http.ResponseWriter, r *http.Request, notification string) {
+	// get session
+	session, err := store.Get(r, "session")
+	if err != nil {
+		log.Printf("ERROR > controllers/controllers.go > addNotification() > store.Get(): %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	session.Values["notification"] = notification
+
+	// save session
+	err = session.Save(r, w)
+	if err != nil {
+		log.Printf("ERROR > controllers/controllers.go > addNotification() > session.Save(): %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // getNotification returns a notification from session.Values if

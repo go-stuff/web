@@ -1,57 +1,26 @@
 {{ define "content" }}
-<h1 class="title is-3">Sessions</h1>
+<h1>Sessions</h1>
 <hr>
-<div id="hide" style="display: none;">
-    <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
-        <thead>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">Username</th>
-                <th scope="col">Remote Addr</th>
-                <th scope="col" class="is-hidden-mobile">Host</th>
-                <th scope="col" class="is-hidden-mobile">Created At</th>
-                <th scope="col">Expires At</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{ range $index, $results := .Sessions }}
-            <tr>
-                <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                <td>{{ .Username }}</td>
-                <td>{{ .RemoteAddr }}</td>
-                <td class="is-hidden-mobile">{{ .Host }}</td>
-                <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
-                <td>{{ timestamp .ExpiresAt }}</td>
-            </tr>
-            {{ end }}
-        </tbody>
-    </table>
-</div>
-<script>
-    $(document).ready(function() {
-        // Setup - add a text input to each footer cell
-        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
-        $('#datatable thead tr:eq(1) th').each( function (i) {
-            var title = $(this).text();
-            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
-    
-            $( 'input', this ).on( 'keyup change', function () {
-                if ( table.column(i).search() !== this.value ) {
-                    table
-                        .column(i)
-                        .search( this.value )
-                        .draw();
-                }
-            } );
-        } );
-        var table = $('#datatable').DataTable({
-            orderCellsTop: true,
-            fixedHeader: true,
-            "order": [[ 1, "asc" ]],
-            "initComplete": function(){
-                $('#hide').show();
-            }
-        });
-    });
-</script>
+<table id="datatable" class="table table-striped table-bordered" style="width: 100%">
+    <thead>
+        <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Remote Addr</th>
+            <th scope="col" class="is-hidden-mobile">Host</th>
+            <th scope="col" class="is-hidden-mobile">Created At</th>
+            <th scope="col">Expires At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range .Sessions }}
+        <tr>
+            <th>{{ .Username }}</th>
+            <td>{{ .RemoteAddr }}</td>
+            <td class="is-hidden-mobile">{{ .Host }}</td>
+            <td class="is-hidden-mobile">{{ timestamp .CreatedAt }}</td>
+            <td>{{ timestamp .ExpiresAt }}</td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
 {{ end }}

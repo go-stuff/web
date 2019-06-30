@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+    {{ template "head" . }}
+    <body>
+        <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            {{ template "header" . }}
+        </nav>
+        <div class="container min-vh-100 my-5 py-5">
+            {{ template "content" . }}
+        </div>
+        {{ template "footer" . }}
+        {{ template "script" . }}
+    </body>
+</html>

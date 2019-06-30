@@ -1,85 +1,43 @@
 {{ define "content" }}
 {{ if .Notification }}
-<div class="notification is-success">
-    <button class="delete"></button>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
     {{ .Notification }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
 {{ end }}
-<h1 class="title is-3">Roles</h1>
+<h1>Roles</h1>
 <hr>
-<div id="hide" >
-    <script>
-        var hide = document.getElementById("hide");
-        hide.style.display = "none";
-    </script>
-    <table id="datatable" class="datatable table table-sm table-hover" style="width: 100%">
-        <thead>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">Description</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{ range $index, $results := .Roles }}
-            <tr>
-                <th scope="row" class="is-hidden-mobile">{{ $index }}</th>
-                <td>{{ .Name }}</td>
-                <td>{{ .Description }}</td>
-                <td>
-                    <a class="button is-link is-small" href="/role/read/{{ .ID }}" aria-label="Read {{ .Name }}">Read</a>
-                    <a class="button is-info is-small" href="/role/update/{{ .ID }}" aria-label="Update {{ .Name }}">Update</a>
-                    <a class="button is-danger is-small" href="/role/delete/{{ .ID }}" aria-label="Delete {{ .Name }}">Delete</a>
-                </td>
-            </tr>
-            {{ end }}
-        </tbody>
-        <tfoot>
-            <tr>
-                <th scope="col" class="is-hidden-mobile">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">Description</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </tfoot>
-    </table>
-    <hr>
-    <a class="button is-primary" href="/role/create">Create</a>
-</div>
-<script>
-    $(document).ready(function() {
-        // Setup - add a text input to each footer cell
-        $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
-        $('#datatable thead tr:eq(1) th').each( function (i) {
-            var title = $(this).text();
-            $(this).html( '<input type="text" placeholder="Search '+title+'" style="width: 100%" />' );
-    
-            $( 'input', this ).on( 'keyup change', function () {
-                if ( table.column(i).search() !== this.value ) {
-                    table
-                        .column(i)
-                        .search( this.value )
-                        .draw();
-                }
-            } );
-        } );
-        var table = $('#datatable').DataTable({
-            orderCellsTop: true,
-            fixedHeader: true,
-            "order": [[ 1, "asc" ]],
-            "initComplete": function(){
-                $('#hide').show();
-            }
-        });
-    });
-    document.addEventListener('DOMContentLoaded', () => {
-        (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
-            $notification = $delete.parentNode;
-            $delete.addEventListener('click', () => {
-                $notification.parentNode.removeChild($notification);
-            });
-        });
-    });
-</script>
+<table id="datatable" class="table table-striped table-bordered" style="width: 100%">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range .Roles }}
+        <tr>
+            <th>{{ .Name }}</th>
+            <td>{{ .Description }}</td>                
+            <td>
+                {{ if and (ne .Name "Admin") (ne .Name "Read Only") }}
+                <div class="form-inline">
+                    <a class="btn btn-info btn-sm mx-1" href="/role/read/{{ .ID }}" aria-label="Read {{ .Name }}"><i class="far fa-eye"></i></a>
+                    <a class="btn btn-primary btn-sm mx-1" href="/role/update/{{ .ID }}" aria-label="Update {{ .Name }}"><i class="far fa-edit"></i></a>
+                    <form method="POST" action="/role/delete/{{ .ID }}" accept-charset="UTF-8">
+                        {{ $.CSRF }}
+                        <button class="btn btn-danger btn-sm mx-1" type="submit" name="Delete {{ .Name }}" value="Delete"><i class="far fa-trash-alt"></i></button>
+                    </form>
+                </div>
+                {{ end }}
+            </td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
+<hr>
+<a class="btn btn-primary" href="/role/create">Create</a>
 {{ end }}
