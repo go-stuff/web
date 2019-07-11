@@ -60,19 +60,17 @@ func Permissions(next http.Handler) http.Handler {
 				return
 			}
 
+			// using the roleid see if this role has permissions to the requested route/pathTemplate
 			roleid := fmt.Sprintf("%v", session.Values["roleid"])
-
 			routeReq.Route = new(api.Route)
 			routeReq.Route.RoleID = roleid
 			routeReq.Route.Path = pathTemplate
-
 			routeRes, err := routeSvc.ReadByRoleIDAndPath(ctx, routeReq)
 			if err != nil {
 				log.Printf("ERROR > controllers/permissions.go > permissionFM() > routeSvc.RouteReadByRoleIDAndPath(): %s\n", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
 			log.Printf("INFO > controllers/controllers.go > permissionFM() > pathTemplate = permission: %s = %v\n", pathTemplate, routeRes.Route.Permission)
 
 			if routeRes.Route.Permission == false {
@@ -88,15 +86,19 @@ func Permissions(next http.Handler) http.Handler {
 				}
 
 				http.Redirect(w, r, "/noauth", http.StatusTemporaryRedirect)
+				return
 			}
 		}
 
-		// save session
-		err = session.Save(r, w)
-		if err != nil {
-			log.Printf("ERROR > middleware/Permissions.go > session.Save(): %s\n", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		// if there is no role, the session is empty, do not save the session
+		if session.Values["roleid"] != nil && session.Values["roleid"] != "" {
+			// save session
+			err = session.Save(r, w)
+			if err != nil {
+				log.Printf("ERROR > middleware/Permissions.go > session.Save(): %s\n", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		// Send the results of this http request to the next handler.
