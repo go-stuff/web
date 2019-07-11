@@ -53,9 +53,10 @@ func Permissions(next http.Handler) http.Handler {
 			// use the api to find a role
 			routeReq := new(api.RouteReadByRoleIDAndPathReq)
 
+			// if there is no role, redirect to the login screen
 			if session.Values["roleid"] == nil || session.Values["roleid"] == "" {
-				log.Println("ERROR > middleware/Permissions.go > no role")
-				http.Error(w, "account has no role", http.StatusInternalServerError)
+				log.Println("INFO > middleware/Permissions.go > no role, redirect to login")
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 				return
 			}
 
