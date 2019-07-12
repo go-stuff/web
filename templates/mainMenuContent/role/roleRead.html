@@ -3,6 +3,7 @@
 <hr>
 <p><strong>Name:</strong> {{ .Role.Name }}</p>    
 <p><strong>Description:</strong> {{ .Role.Description }}</p>
+<p><strong>Group:</strong> {{ .Role.Group }}</p>
 {{ if .Role.CreatedBy }}
 <hr>
 <p><strong>Created by:</strong> {{ .Role.CreatedBy }} @ {{ timestamp .Role.CreatedAt }}</p>

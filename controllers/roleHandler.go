@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/csrf"
@@ -37,6 +38,7 @@ func roleSeed() error {
 		createReq := new(api.RoleCreateReq)
 		createReq.Name = "Admin"
 		createReq.Description = "Administrative Role (Built-In)"
+		createReq.Group = os.Getenv("ADMIN_AD_GROUP")
 		createReq.CreatedBy = "System"
 		_, err := roleSvc.Create(ctx, createReq)
 		if err != nil {
@@ -58,6 +60,7 @@ func roleSeed() error {
 		createReq := new(api.RoleCreateReq)
 		createReq.Name = "Read Only"
 		createReq.Description = "Read Only Role (Built-In)"
+		createReq.Group = ""
 		createReq.CreatedBy = "System"
 		_, err = roleSvc.Create(ctx, createReq)
 		if err != nil {
@@ -172,6 +175,7 @@ func roleCreateHandler(w http.ResponseWriter, r *http.Request) {
 		roleReq := new(api.RoleCreateReq)
 		roleReq.Name = r.FormValue("name")
 		roleReq.Description = r.FormValue("description")
+		roleReq.Group = r.FormValue("group")
 		roleReq.CreatedBy = session.Values["username"].(string)
 		_, err = roleSvc.Create(ctx, roleReq)
 		if err != nil {
@@ -311,6 +315,7 @@ func roleUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		roleReq.ID = vars["id"]
 		roleReq.Name = r.FormValue("name")
 		roleReq.Description = r.FormValue("description")
+		roleReq.Group = r.FormValue("group")
 		roleReq.ModifiedBy = session.Values["username"].(string)
 		_, err := roleSvc.Update(ctx, roleReq)
 		if err != nil {

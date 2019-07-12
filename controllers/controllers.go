@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-stuff/mongostore"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -270,7 +271,11 @@ func initRouter() *mux.Router {
 func timestampFM() template.FuncMap {
 	return template.FuncMap{
 		"timestamp": func(ts timestamp.Timestamp) string {
-			return time.Unix(ts.Seconds, int64(ts.Nanos)).Format("2006-Jan-02 03:04:05 PM MST")
+			goTime, err := ptypes.Timestamp(&ts)
+			if err != nil {
+				return err.Error()
+			}
+			return goTime.Local().Format("2006-Jan-02 03:04:05 PM MST")
 		},
 	}
 }

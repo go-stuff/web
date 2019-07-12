@@ -14,6 +14,7 @@
         <tr>
             <th scope="col">Name</th>
             <th scope="col">Description</th>
+            <th scope="col">Group</th>
             <th scope="col">Actions</th>
         </tr>
     </thead>
@@ -21,7 +22,8 @@
         {{ range .Roles }}
         <tr>
             <th>{{ .Name }}</th>
-            <td>{{ .Description }}</td>                
+            <td>{{ .Description }}</td>
+            <td>{{ .Group }}</td>
             <td>
                 {{ if and (ne .Name "Admin") (ne .Name "Read Only") }}
                 <div class="form-inline">

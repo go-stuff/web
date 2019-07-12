@@ -48,6 +48,8 @@ github.com/go-stuff/grpc v0.0.0-20190630113524-5094de0c38c1 h1:j3Wx8cXSuQjLVFO7c
 github.com/go-stuff/grpc v0.0.0-20190630113524-5094de0c38c1/go.mod h1:IeEaTaCqX6VatA6zbqrfMRoPmYFDy4gSyNHgNDfqkeI=
 github.com/go-stuff/grpc v0.0.0-20190630115153-3a2fafb8369a h1:canTAgYsuDFn2WFZh//aoSEuEvb1ZEo8F+k7y5d8bA0=
 github.com/go-stuff/grpc v0.0.0-20190630115153-3a2fafb8369a/go.mod h1:IeEaTaCqX6VatA6zbqrfMRoPmYFDy4gSyNHgNDfqkeI=
+github.com/go-stuff/grpc v0.0.0-20190711234811-a4a057adc810 h1:DIbQ4WiU9MC2q9Wq1frvLYhsIW5+WhQaP4znxmK+jRA=
+github.com/go-stuff/grpc v0.0.0-20190711234811-a4a057adc810/go.mod h1:IeEaTaCqX6VatA6zbqrfMRoPmYFDy4gSyNHgNDfqkeI=
 github.com/go-stuff/ldap v0.0.2 h1:7OGTxAR1kEUlwQCErSpd97b7h8GLruBxggbHdaUM5Vg=
 github.com/go-stuff/ldap v0.0.2/go.mod h1:BgYemTEa4GEutzCQpXmm9+eLDMSsuMb8a0j7zRFrrEs=
 github.com/go-stuff/mongostore v0.1.16 h1:tZCnMUtjvNKUH44yLlcwdzQaLQG+6Osk2WeuwNpfYxw=

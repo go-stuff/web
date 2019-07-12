@@ -15,6 +15,13 @@ func serverListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+switch r.Method {
+case "GET":
+}
+
+
+
+
 	// save session
 	err = session.Save(r, w)
 	if err != nil {
